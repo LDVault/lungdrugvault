@@ -4,12 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { FileUpload } from "@/components/FileUpload";
 import { FileGrid } from "@/components/FileGrid";
 import { Button } from "@/components/ui/button";
-import { CloudUpload, LogOut } from "lucide-react";
+import { CloudUpload, LogOut, Shield } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const Index = () => {
   const navigate = useNavigate();
   const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isAdmin } = useIsAdmin();
 
   useEffect(() => {
     checkAuth();
@@ -63,14 +65,26 @@ const Index = () => {
             </div>
             <h1 className="text-2xl font-bold">CloudVault</h1>
           </div>
-          <Button
-            variant="ghost"
-            onClick={handleSignOut}
-            className="hover:bg-destructive/10 hover:text-destructive"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="flex gap-2">
+            {isAdmin && (
+              <Button
+                variant="outline"
+                onClick={() => navigate("/admin")}
+                className="gap-2 border-border hover:bg-secondary"
+              >
+                <Shield className="w-4 h-4" />
+                Admin Panel
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              onClick={handleSignOut}
+              className="hover:bg-destructive/10 hover:text-destructive"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
