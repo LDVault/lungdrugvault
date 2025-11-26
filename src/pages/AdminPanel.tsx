@@ -124,14 +124,17 @@ const AdminPanel = () => {
     }
 
     try {
-      const { error } = await supabase.auth.admin.updateUserById(
-        selectedUser.id,
-        { password: newPassword }
-      );
+      const { data, error } = await supabase.functions.invoke('admin-operations', {
+        body: { 
+          action: 'reset_password',
+          userId: selectedUser.id,
+          newPassword: newPassword
+        },
+      });
 
       if (error) throw error;
 
-      toast.success(`Password reset for ${selectedUser.email}`);
+      toast.success(data.message || `Password reset for ${selectedUser.email}`);
       setResetDialogOpen(false);
       setNewPassword("");
       setSelectedUser(null);

@@ -6,8 +6,9 @@ const corsHeaders = {
 };
 
 interface AdminRequest {
-  action: 'list_users' | 'grant_admin' | 'revoke_admin';
+  action: 'list_users' | 'grant_admin' | 'revoke_admin' | 'reset_password';
   userId?: string;
+  newPassword?: string;
 }
 
 Deno.serve(async (req) => {
@@ -56,7 +57,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { action, userId }: AdminRequest = await req.json();
+    const { action, userId, newPassword }: AdminRequest = await req.json();
     console.log('Admin operation:', action, 'for user:', userId);
 
     if (action === 'list_users') {
@@ -127,6 +128,29 @@ Deno.serve(async (req) => {
       }
 
       return new Response(JSON.stringify({ message: 'Admin privileges revoked' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'reset_password' && userId && newPassword) {
+      if (newPassword.length < 6) {
+        return new Response(JSON.stringify({ error: 'Password must be at least 6 characters' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { error } = await supabaseClient.auth.admin.updateUserById(
+        userId,
+        { password: newPassword }
+      );
+
+      if (error) {
+        console.error('Error resetting password:', error);
+        throw error;
+      }
+
+      return new Response(JSON.stringify({ message: 'Password reset successfully' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
