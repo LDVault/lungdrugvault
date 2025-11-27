@@ -87,7 +87,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md border-border bg-card/50 backdrop-blur-sm">
+      <Card className="w-full max-w-md border-border bg-card/50 backdrop-blur-sm animate-scale-in">
         <CardHeader className="space-y-3 text-center">
           <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
             <CloudUpload className="w-8 h-8 text-primary" />

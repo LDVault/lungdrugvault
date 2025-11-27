@@ -126,15 +126,16 @@ export const FolderGrid = ({ folders, onFolderDeleted, onFolderClick }: FolderGr
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-      {folders.map((folder) => (
+      {folders.map((folder, index) => (
         <Card
           key={folder.id}
           onDragOver={(e) => handleDragOver(e, folder.id)}
           onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, folder.id)}
-          className={`group bg-card/50 backdrop-blur-sm border-border hover:border-primary/50 transition-smooth overflow-hidden cursor-pointer ${
+          className={`group bg-card/50 backdrop-blur-sm border-border hover:border-primary/50 transition-smooth overflow-hidden cursor-pointer hover-lift animate-fade-in-up ${
             dragOverFolder === folder.id ? 'border-primary border-2 bg-primary/10 scale-105' : ''
           }`}
+          style={{ animationDelay: `${index * 0.05}s` }}
         >
           <CardContent className="p-6" onClick={() => onFolderClick(folder.id)}>
             <div className="flex items-center justify-center h-32 mb-4 bg-secondary/50 rounded-xl relative">

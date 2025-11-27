@@ -264,15 +264,16 @@ export const FileGrid = ({ files, onFileDeleted, isSharedView = false, currentFo
         file={previewFile}
       />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {files.map((file) => (
+        {files.map((file, index) => (
         <Card
           key={file.id}
           draggable
           onDragStart={(e) => handleDragStart(e, file.id)}
           onDragEnd={handleDragEnd}
-          className={`group bg-card/50 backdrop-blur-sm border-border hover:border-primary/50 transition-smooth overflow-hidden cursor-move ${
+          className={`group bg-card/50 backdrop-blur-sm border-border hover:border-primary/50 transition-smooth overflow-hidden cursor-move hover-lift animate-fade-in-up ${
             draggedFile === file.id ? 'opacity-50 scale-95' : ''
           }`}
+          style={{ animationDelay: `${index * 0.05}s` }}
         >
           <CardContent className="p-6">
             <div 

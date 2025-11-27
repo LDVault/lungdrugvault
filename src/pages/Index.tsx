@@ -104,7 +104,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Header with Gradient */}
-      <header className="border-b border-border bg-gradient-to-r from-card/80 via-card/50 to-card/80 backdrop-blur-md sticky top-0 z-10 shadow-lg">
+      <header className="border-b border-border bg-gradient-to-r from-card/80 via-card/50 to-card/80 backdrop-blur-md sticky top-0 z-10 shadow-lg animate-fade-in">
         <div className="container mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -157,7 +157,7 @@ const Index = () => {
 
       <main className="container mx-auto px-6 py-10">
         {/* Upload Section */}
-        <section className="mb-12">
+        <section className="mb-12 animate-fade-in-up">
           <div className="max-w-4xl mx-auto">
             <div className="flex gap-4 items-start">
               <div className="flex-1">
