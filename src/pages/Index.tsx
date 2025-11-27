@@ -6,7 +6,7 @@ import { FileGrid } from "@/components/FileGrid";
 import { FolderGrid } from "@/components/FolderGrid";
 import { CreateFolderDialog } from "@/components/CreateFolderDialog";
 import { Button } from "@/components/ui/button";
-import { CloudUpload, LogOut, Shield, Settings, Share2, ArrowLeft, LayoutDashboard } from "lucide-react";
+import { CloudUpload, LogOut, Shield, Settings, Share2, ArrowLeft, LayoutDashboard, Star } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const Index = () => {
@@ -134,6 +134,14 @@ const Index = () => {
               >
                 <LayoutDashboard className="w-4 h-4" />
                 <span className="hidden sm:inline">Dashboard</span>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/favorites")}
+                className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth"
+              >
+                <Star className="w-4 h-4" />
+                <span className="hidden sm:inline">Favorites</span>
               </Button>
               <Button
                 variant="outline"

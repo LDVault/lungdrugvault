@@ -17,7 +17,10 @@ import {
   Image,
   Video,
   FileText,
-  Archive
+  Archive,
+  Home,
+  Star,
+  Activity
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -147,9 +150,19 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
-        <div>
-          <h1 className="text-4xl font-bold text-foreground mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's an overview of your storage.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-2">Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back! Here's an overview of your storage.</p>
+          </div>
+          <Button
+            onClick={() => navigate("/")}
+            variant="outline"
+            className="gap-2 hover-lift"
+          >
+            <Home className="h-4 w-4" />
+            Back to Files
+          </Button>
         </div>
 
         {/* Stats Cards */}
