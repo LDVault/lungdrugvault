@@ -7,8 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Shield, ArrowLeft, KeyRound, Megaphone, Wrench, UserCog } from "lucide-react";
+import { Shield, ArrowLeft, KeyRound, Megaphone, Wrench, UserCog, Trash2, Users, HardDrive } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +37,8 @@ const AdminPanel = () => {
   const [announcementEnabled, setAnnouncementEnabled] = useState(false);
   const [announcementMessage, setAnnouncementMessage] = useState("");
   const [announcementType, setAnnouncementType] = useState<"info" | "warning" | "error">("info");
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalStorage, setTotalStorage] = useState(0);
 
   useEffect(() => {
     if (!adminLoading && !isAdmin) {
@@ -87,6 +90,15 @@ const AdminPanel = () => {
       if (error) throw error;
       
       setUsers(data.users || []);
+      setTotalUsers(data.users?.length || 0);
+
+      // Calculate total storage
+      const { data: files } = await supabase
+        .from('files')
+        .select('size');
+      
+      const total = files?.reduce((acc, file) => acc + (file.size || 0), 0) || 0;
+      setTotalStorage(total);
     } catch (error: any) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
@@ -178,6 +190,33 @@ const AdminPanel = () => {
     }
   };
 
+  const handleDeleteUser = async (userId: string, email: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-operations', {
+        body: { 
+          action: 'delete_user',
+          userId: userId
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(data.message || `User ${email} deleted successfully`);
+      await fetchUsers(); // Refresh the list
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      toast.error("Failed to delete user");
+    }
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  };
+
   if (adminLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -211,6 +250,49 @@ const AdminPanel = () => {
               <p className="text-muted-foreground">Manage users and system settings</p>
             </div>
           </div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3 mb-6">
+          <Card className="border-border bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                <CardTitle className="text-lg">Total Users</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">{totalUsers}</div>
+              <p className="text-xs text-muted-foreground mt-1">Registered accounts</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <HardDrive className="w-5 h-5 text-primary" />
+                <CardTitle className="text-lg">Total Storage</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">{formatBytes(totalStorage)}</div>
+              <p className="text-xs text-muted-foreground mt-1">Files storage used</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-primary" />
+                <CardTitle className="text-lg">Admin Users</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">
+                {users.filter(u => u.isAdmin).length}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Users with admin privileges</p>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 mb-6">
@@ -359,34 +441,72 @@ const AdminPanel = () => {
                               Reset Password
                             </Button>
                           </DialogTrigger>
-                        <DialogContent className="border-border bg-card">
-                          <DialogHeader>
-                            <DialogTitle>Reset Password</DialogTitle>
-                            <DialogDescription>
-                              Enter a new password for {user.email}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="newPassword">New Password</Label>
-                              <Input
-                                id="newPassword"
-                                type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="Enter new password (min 6 characters)"
-                                className="bg-secondary/50"
-                              />
+                          <DialogContent className="border-border bg-card">
+                            <DialogHeader>
+                              <DialogTitle>Reset Password</DialogTitle>
+                              <DialogDescription>
+                                Enter a new password for {user.email}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="newPassword">New Password</Label>
+                                <Input
+                                  id="newPassword"
+                                  type="password"
+                                  value={newPassword}
+                                  onChange={(e) => setNewPassword(e.target.value)}
+                                  placeholder="Enter new password (min 6 characters)"
+                                  className="bg-secondary/50"
+                                />
+                              </div>
+                              <Button
+                                onClick={handleResetPassword}
+                                className="w-full bg-primary hover:bg-primary/90"
+                              >
+                                Reset Password
+                              </Button>
                             </div>
-                            <Button
-                              onClick={handleResetPassword}
-                              className="w-full bg-primary hover:bg-primary/90"
-                            >
-                              Reset Password
-                            </Button>
-                          </div>
-                        </DialogContent>
+                          </DialogContent>
                         </Dialog>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="gap-2"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="border-border bg-card">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete User Account</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete {user.email}? This will permanently delete:
+                                <ul className="list-disc list-inside mt-2 space-y-1">
+                                  <li>User account and authentication data</li>
+                                  <li>All files and folders</li>
+                                  <li>Profile information</li>
+                                  <li>All associated data</li>
+                                </ul>
+                                <span className="block mt-2 font-semibold text-destructive">
+                                  This action cannot be undone.
+                                </span>
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteUser(user.id, user.email)}
+                                className="bg-destructive hover:bg-destructive/90"
+                              >
+                                Delete Account
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
