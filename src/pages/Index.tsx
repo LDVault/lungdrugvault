@@ -3,20 +3,24 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { FileUpload } from "@/components/FileUpload";
 import { FileGrid } from "@/components/FileGrid";
+import { FolderGrid } from "@/components/FolderGrid";
 import { CreateFolderDialog } from "@/components/CreateFolderDialog";
 import { Button } from "@/components/ui/button";
-import { CloudUpload, LogOut, Shield, Settings, Share2 } from "lucide-react";
+import { CloudUpload, LogOut, Shield, Settings, Share2, ArrowLeft } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const Index = () => {
   const navigate = useNavigate();
   const [files, setFiles] = useState<any[]>([]);
+  const [folders, setFolders] = useState<any[]>([]);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { isAdmin } = useIsAdmin();
 
   useEffect(() => {
     checkAuth();
     loadFiles();
+    loadFolders();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) {
@@ -25,7 +29,7 @@ const Index = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, currentFolderId]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -37,7 +41,7 @@ const Index = () => {
   const loadFiles = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('files')
         .select(`
           *,
@@ -45,8 +49,15 @@ const Index = () => {
             username,
             avatar_url
           )
-        `)
-        .order('created_at', { ascending: false });
+        `);
+
+      if (currentFolderId) {
+        query = query.eq('folder_id', currentFolderId);
+      } else {
+        query = query.is('folder_id', null);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setFiles(data || []);
@@ -55,6 +66,34 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadFolders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('folders')
+        .select(`
+          *,
+          profiles:user_id (
+            username
+          )
+        `)
+        .is('parent_folder_id', null)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setFolders(data || []);
+    } catch (error: any) {
+      console.error("Error loading folders:", error);
+    }
+  };
+
+  const handleFolderClick = (folderId: string) => {
+    setCurrentFolderId(folderId);
+  };
+
+  const handleBackClick = () => {
+    setCurrentFolderId(null);
   };
 
   const handleSignOut = async () => {
@@ -113,18 +152,46 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8 space-y-8">
         <div className="flex gap-4">
-          <FileUpload onUploadComplete={loadFiles} />
-          <CreateFolderDialog onFolderCreated={loadFiles} />
+          <FileUpload onUploadComplete={loadFiles} currentFolderId={currentFolderId} />
+          {!currentFolderId && <CreateFolderDialog onFolderCreated={loadFolders} />}
         </div>
         
         <div>
-          <h2 className="text-2xl font-bold mb-6">Your Files</h2>
+          <div className="flex items-center gap-4 mb-6">
+            {currentFolderId && (
+              <Button
+                variant="ghost"
+                onClick={handleBackClick}
+                className="gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </Button>
+            )}
+            <h2 className="text-2xl font-bold">
+              {currentFolderId ? "Folder Contents" : "Your Files & Folders"}
+            </h2>
+          </div>
           {loading ? (
             <div className="text-center py-16">
-              <p className="text-muted-foreground">Loading files...</p>
+              <p className="text-muted-foreground">Loading...</p>
             </div>
           ) : (
-            <FileGrid files={files} onFileDeleted={loadFiles} />
+            <>
+              {!currentFolderId && (
+                <FolderGrid 
+                  folders={folders} 
+                  onFolderDeleted={loadFolders}
+                  onFolderClick={handleFolderClick}
+                />
+              )}
+              <FileGrid 
+                files={files} 
+                onFileDeleted={loadFiles}
+                currentFolderId={currentFolderId}
+                folders={folders}
+              />
+            </>
           )}
         </div>
       </main>

@@ -6,9 +6,10 @@ import { Button } from "./ui/button";
 
 interface FileUploadProps {
   onUploadComplete: () => void;
+  currentFolderId?: string | null;
 }
 
-export const FileUpload = ({ onUploadComplete }: FileUploadProps) => {
+export const FileUpload = ({ onUploadComplete, currentFolderId }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -39,6 +40,7 @@ export const FileUpload = ({ onUploadComplete }: FileUploadProps) => {
           size: file.size,
           mime_type: file.type,
           storage_path: fileName,
+          folder_id: currentFolderId,
         });
 
       if (dbError) throw dbError;
