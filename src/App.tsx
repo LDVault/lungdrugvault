@@ -9,6 +9,7 @@ import Share from "./pages/Share";
 import AdminPanel from "./pages/AdminPanel";
 import Settings from "./pages/Settings";
 import SharedWithMe from "./pages/SharedWithMe";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Maintenance from "./pages/Maintenance";
 import { MaintenanceGuard } from "./components/MaintenanceGuard";
@@ -27,6 +28,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/shared" element={<SharedWithMe />} />
