@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      favorites: {
+        Row: {
+          created_at: string | null
+          file_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       file_shares: {
         Row: {
           created_at: string

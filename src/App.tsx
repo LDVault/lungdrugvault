@@ -10,6 +10,7 @@ import AdminPanel from "./pages/AdminPanel";
 import Settings from "./pages/Settings";
 import SharedWithMe from "./pages/SharedWithMe";
 import Dashboard from "./pages/Dashboard";
+import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
 import Maintenance from "./pages/Maintenance";
 import { MaintenanceGuard } from "./components/MaintenanceGuard";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/favorites" element={<Favorites />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/shared" element={<SharedWithMe />} />
