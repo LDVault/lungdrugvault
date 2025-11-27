@@ -207,8 +207,9 @@ export const FileGrid = ({ files, onFileDeleted, isSharedView = false, currentFo
 
   const handleDragStart = (e: React.DragEvent, fileId: string) => {
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', fileId);
+    e.dataTransfer.setData('application/x-file-id', fileId);
     setDraggedFile(fileId);
+    console.log('Drag started for file:', fileId);
   };
 
   const handleDragEnd = () => {

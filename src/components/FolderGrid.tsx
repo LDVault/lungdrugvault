@@ -98,8 +98,11 @@ export const FolderGrid = ({ folders, onFolderDeleted, onFolderClick }: FolderGr
     e.stopPropagation();
     setDragOverFolder(null);
 
-    const fileId = e.dataTransfer.getData('text/plain');
-    if (!fileId) return;
+    const fileId = e.dataTransfer.getData('application/x-file-id');
+    if (!fileId) {
+      console.log('No file ID found in drag data');
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -112,6 +115,7 @@ export const FolderGrid = ({ folders, onFolderDeleted, onFolderClick }: FolderGr
       toast.success("File moved to folder successfully!");
       onFolderDeleted(); // Refresh the view
     } catch (error: any) {
+      console.error('Move error:', error);
       toast.error(error.message || "Failed to move file");
     }
   };
