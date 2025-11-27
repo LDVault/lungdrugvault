@@ -38,31 +38,12 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const isEmail = emailOrUsername.includes('@');
-        
-        if (isEmail) {
-          // Direct email login
-          const { error } = await supabase.auth.signInWithPassword({
-            email: emailOrUsername,
-            password,
-          });
-          if (error) throw error;
-        } else {
-          // Username login - need to fetch email first
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('username', emailOrUsername)
-            .maybeSingle();
-
-          if (!profile) {
-            throw new Error('Invalid username or password');
-          }
-
-          // Try to get user email - this requires looking up via RPC or direct auth
-          // Since we can't access auth.users directly, we'll store email in a way we can access
-          throw new Error('Username login requires email. Please use your email to log in.');
-        }
+        // Login only supports email
+        const { error } = await supabase.auth.signInWithPassword({
+          email: emailOrUsername,
+          password,
+        });
+        if (error) throw error;
         
         toast.success("Welcome back!");
       } else {
@@ -116,13 +97,11 @@ const Auth = () => {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="emailOrUsername">
-                {isLogin ? "Email or Username" : "Email"}
-              </Label>
+              <Label htmlFor="emailOrUsername">Email</Label>
               <Input
                 id="emailOrUsername"
-                type={isLogin ? "text" : "email"}
-                placeholder={isLogin ? "you@example.com or username" : "you@example.com"}
+                type="email"
+                placeholder="you@example.com"
                 value={emailOrUsername}
                 onChange={(e) => setEmailOrUsername(e.target.value)}
                 required
