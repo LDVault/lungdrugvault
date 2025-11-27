@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FileIcon, Trash2, Share2, Download, Copy, Check, Users } from "lucide-react";
+import { FileIcon, Trash2, Share2, Download, Copy, Check, Users, Play, FolderInput } from "lucide-react";
+import { VideoPlayer } from "./VideoPlayer";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -46,13 +47,20 @@ interface FileGridProps {
   files: File[];
   onFileDeleted: () => void;
   isSharedView?: boolean;
+  currentFolderId?: string | null;
+  folders?: any[];
 }
 
-export const FileGrid = ({ files, onFileDeleted, isSharedView = false }: FileGridProps) => {
+export const FileGrid = ({ files, onFileDeleted, isSharedView = false, currentFolderId, folders = [] }: FileGridProps) => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<any>(null);
   const [shareEmail, setShareEmail] = useState("");
   const [users, setUsers] = useState<any[]>([]);
+  const [videoPlayerOpen, setVideoPlayerOpen] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoFileName, setVideoFileName] = useState("");
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [selectedFolder, setSelectedFolder] = useState("");
 
   useEffect(() => {
     loadUsers();
@@ -157,6 +165,47 @@ export const FileGrid = ({ files, onFileDeleted, isSharedView = false }: FileGri
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  const isVideoFile = (mimeType: string) => {
+    return mimeType.startsWith('video/');
+  };
+
+  const playVideo = async (file: File) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('user-files')
+        .createSignedUrl(file.storage_path, 3600);
+
+      if (error) throw error;
+
+      setVideoUrl(data.signedUrl);
+      setVideoFileName(file.name);
+      setVideoPlayerOpen(true);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load video");
+    }
+  };
+
+  const moveFileToFolder = async () => {
+    if (!selectedFile || !selectedFolder) return;
+
+    try {
+      const { error } = await supabase
+        .from('files')
+        .update({ folder_id: selectedFolder })
+        .eq('id', selectedFile.id);
+
+      if (error) throw error;
+
+      toast.success("File moved successfully!");
+      setMoveDialogOpen(false);
+      setSelectedFile(null);
+      setSelectedFolder("");
+      onFileDeleted();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to move file");
+    }
+  };
+
   if (files.length === 0) {
     return (
       <div className="text-center py-16">
@@ -167,15 +216,30 @@ export const FileGrid = ({ files, onFileDeleted, isSharedView = false }: FileGri
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {files.map((file) => (
+    <>
+      <VideoPlayer 
+        isOpen={videoPlayerOpen}
+        onClose={() => setVideoPlayerOpen(false)}
+        videoUrl={videoUrl}
+        fileName={videoFileName}
+      />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {files.map((file) => (
         <Card
           key={file.id}
           className="group bg-card/50 backdrop-blur-sm border-border hover:border-primary/50 transition-smooth overflow-hidden"
         >
           <CardContent className="p-6">
-            <div className="flex items-center justify-center h-32 mb-4 bg-secondary/50 rounded-xl">
+            <div 
+              className="flex items-center justify-center h-32 mb-4 bg-secondary/50 rounded-xl relative group cursor-pointer"
+              onClick={() => isVideoFile(file.mime_type) && playVideo(file)}
+            >
               <FileIcon className="w-16 h-16 text-primary" />
+              {isVideoFile(file.mime_type) && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Play className="w-12 h-12 text-white" />
+                </div>
+              )}
             </div>
             <h3 className="font-semibold truncate mb-1" title={file.name}>
               {file.name}
@@ -192,6 +256,16 @@ export const FileGrid = ({ files, onFileDeleted, isSharedView = false }: FileGri
             </div>
           </CardContent>
           <CardFooter className="flex gap-2 p-4 pt-0">
+            {isVideoFile(file.mime_type) && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="flex-1 hover:bg-primary/10 hover:text-primary"
+                onClick={() => playVideo(file)}
+              >
+                <Play className="w-4 h-4" />
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"
@@ -314,6 +388,59 @@ export const FileGrid = ({ files, onFileDeleted, isSharedView = false }: FileGri
                 </DialogContent>
               </Dialog>
             )}
+
+            {!currentFolderId && folders.length > 0 && (
+              <Dialog open={moveDialogOpen && selectedFile?.id === file.id} onOpenChange={(open) => {
+                setMoveDialogOpen(open);
+                if (!open) {
+                  setSelectedFile(null);
+                  setSelectedFolder("");
+                }
+              }}>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="flex-1 hover:bg-primary/10 hover:text-primary"
+                    onClick={() => setSelectedFile(file)}
+                  >
+                    <FolderInput className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-card border-border">
+                  <DialogHeader>
+                    <DialogTitle>Move to Folder</DialogTitle>
+                    <DialogDescription>
+                      Select a folder to move this file to
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Select Folder</label>
+                      <select 
+                        className="w-full mt-2 px-3 py-2 bg-secondary/50 border border-border rounded-lg"
+                        value={selectedFolder}
+                        onChange={(e) => setSelectedFolder(e.target.value)}
+                      >
+                        <option value="">Choose a folder...</option>
+                        {folders.map(folder => (
+                          <option key={folder.id} value={folder.id}>
+                            {folder.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <Button 
+                      className="w-full"
+                      onClick={moveFileToFolder}
+                      disabled={!selectedFolder}
+                    >
+                      Move File
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -346,7 +473,8 @@ export const FileGrid = ({ files, onFileDeleted, isSharedView = false }: FileGri
             </AlertDialog>
           </CardFooter>
         </Card>
-      ))}
-    </div>
+        ))}
+      </div>
+    </>
   );
 };
