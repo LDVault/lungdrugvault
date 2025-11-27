@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { FileIcon, Trash2, Share2, Download, Copy, Check, Users, Play, FolderInput, Eye } from "lucide-react";
-import { CustomVideoPlayer } from "./CustomVideoPlayer";
+import { VideoPlayer } from "./VideoPlayer";
 import { FilePreview } from "./FilePreview";
 import { Button } from "./ui/button";
 import {
@@ -248,7 +248,7 @@ export const FileGrid = ({ files, onFileDeleted, isSharedView = false, currentFo
 
   return (
     <>
-      <CustomVideoPlayer 
+      <VideoPlayer 
         isOpen={videoPlayerOpen}
         onClose={() => setVideoPlayerOpen(false)}
         videoUrl={videoUrl}
