@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 interface AdminRequest {
-  action: 'list_users' | 'grant_admin' | 'revoke_admin' | 'reset_password';
+  action: 'list_users' | 'grant_admin' | 'revoke_admin' | 'reset_password' | 'delete_user';
   userId?: string;
   newPassword?: string;
 }
@@ -151,6 +151,51 @@ Deno.serve(async (req) => {
       }
 
       return new Response(JSON.stringify({ message: 'Password reset successfully' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'delete_user' && userId) {
+      // Delete user's files from storage
+      const { data: files } = await supabaseClient
+        .from('files')
+        .select('storage_path')
+        .eq('user_id', userId);
+
+      if (files && files.length > 0) {
+        const filePaths = files.map(f => f.storage_path);
+        await supabaseClient.storage.from('user-files').remove(filePaths);
+      }
+
+      // Delete user's avatar from storage
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', userId)
+        .single();
+
+      if (profile?.avatar_url) {
+        const avatarPath = profile.avatar_url.split('/').pop();
+        if (avatarPath) {
+          await supabaseClient.storage.from('avatars').remove([`${userId}/${avatarPath}`]);
+        }
+      }
+
+      // Delete user's data from tables (cascading will handle related records)
+      await supabaseClient.from('files').delete().eq('user_id', userId);
+      await supabaseClient.from('folders').delete().eq('user_id', userId);
+      await supabaseClient.from('profiles').delete().eq('id', userId);
+      await supabaseClient.from('user_roles').delete().eq('user_id', userId);
+
+      // Finally, delete the user from auth
+      const { error } = await supabaseClient.auth.admin.deleteUser(userId);
+
+      if (error) {
+        console.error('Error deleting user:', error);
+        throw error;
+      }
+
+      return new Response(JSON.stringify({ message: 'User account deleted successfully' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
