@@ -389,7 +389,7 @@ export const FileGrid = ({ files, onFileDeleted, isSharedView = false, currentFo
               </Dialog>
             )}
 
-            {!currentFolderId && folders.length > 0 && (
+            {!isSharedView && folders.length > 0 && (
               <Dialog open={moveDialogOpen && selectedFile?.id === file.id} onOpenChange={(open) => {
                 setMoveDialogOpen(open);
                 if (!open) {
