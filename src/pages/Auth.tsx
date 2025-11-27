@@ -38,9 +38,26 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        // Login only supports email
+        const isEmail = emailOrUsername.includes('@');
+        let loginEmail = emailOrUsername;
+        
+        // If not email format, look up username to get email
+        if (!isEmail) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('username', emailOrUsername)
+            .maybeSingle();
+          
+          if (profileError || !profile?.email) {
+            throw new Error('Invalid username or password');
+          }
+          
+          loginEmail = profile.email;
+        }
+        
         const { error } = await supabase.auth.signInWithPassword({
-          email: emailOrUsername,
+          email: loginEmail,
           password,
         });
         if (error) throw error;
@@ -97,11 +114,13 @@ const Auth = () => {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="emailOrUsername">Email</Label>
+              <Label htmlFor="emailOrUsername">
+                {isLogin ? "Email or Username" : "Email"}
+              </Label>
               <Input
                 id="emailOrUsername"
-                type="email"
-                placeholder="you@example.com"
+                type={isLogin ? "text" : "email"}
+                placeholder={isLogin ? "email or username" : "you@example.com"}
                 value={emailOrUsername}
                 onChange={(e) => setEmailOrUsername(e.target.value)}
                 required
