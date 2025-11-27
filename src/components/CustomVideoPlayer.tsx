@@ -67,6 +67,62 @@ export const CustomVideoPlayer = ({ isOpen, onClose, videoUrl, fileName, storage
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (!videoRef.current) return;
+
+      switch (e.key.toLowerCase()) {
+        case ' ':
+        case 'k':
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'arrowleft':
+          e.preventDefault();
+          skip(-10);
+          break;
+        case 'arrowright':
+          e.preventDefault();
+          skip(10);
+          break;
+        case 'j':
+          e.preventDefault();
+          skip(-10);
+          break;
+        case 'l':
+          e.preventDefault();
+          skip(10);
+          break;
+        case 'm':
+          e.preventDefault();
+          toggleMute();
+          break;
+        case 'f':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case 'arrowup':
+          e.preventDefault();
+          handleVolumeChange([Math.min(1, volume + 0.1)]);
+          break;
+        case 'arrowdown':
+          e.preventDefault();
+          handleVolumeChange([Math.max(0, volume - 0.1)]);
+          break;
+        case 'escape':
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          }
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [isOpen, isPlaying, volume]);
+
+  useEffect(() => {
     if (videoRef.current) {
       videoRef.current.playbackRate = playbackRate;
     }
@@ -138,10 +194,21 @@ export const CustomVideoPlayer = ({ isOpen, onClose, videoUrl, fileName, storage
     if (hideControlsTimeout.current) {
       clearTimeout(hideControlsTimeout.current);
     }
-    hideControlsTimeout.current = setTimeout(() => {
-      if (isPlaying) setShowControls(false);
-    }, 3000);
+    if (isPlaying) {
+      hideControlsTimeout.current = setTimeout(() => {
+        setShowControls(false);
+      }, 3000);
+    }
   };
+
+  useEffect(() => {
+    if (!isPlaying) {
+      setShowControls(true);
+      if (hideControlsTimeout.current) {
+        clearTimeout(hideControlsTimeout.current);
+      }
+    }
+  }, [isPlaying]);
 
   const downloadVideo = async () => {
     if (!storagePath) return;
@@ -169,7 +236,7 @@ export const CustomVideoPlayer = ({ isOpen, onClose, videoUrl, fileName, storage
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-black border-border max-w-[95vw] max-h-[95vh] p-0 overflow-hidden">
+      <DialogContent className="bg-black border-border max-w-[95vw] max-h-[95vh] p-0 overflow-hidden" onPointerDownOutside={onClose}>
         <div 
           ref={containerRef}
           className="relative w-full h-full bg-black"
