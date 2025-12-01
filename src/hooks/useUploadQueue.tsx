@@ -199,25 +199,15 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
 
         await uploadPromise;
       } else {
-        // For large files, use multipart upload via Supabase client
-        const { error: uploadError } = await supabase.storage
-          .from('user-files')
-          .upload(storagePath, fileToUpload, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) throw uploadError;
-
-        // Simulate progress for large files since we can't track it easily
+        // For large files, simulate progress during upload
         let progress = 0;
         const progressInterval = setInterval(() => {
           if (progress < 95) {
-            progress += 1;
+            progress += 2;
             const now = Date.now();
             const elapsed = (now - startTime) / 1000;
             const uploadedBytes = (progress / 100) * fileSize;
-            const speed = uploadedBytes / elapsed;
+            const speed = elapsed > 0 ? uploadedBytes / elapsed : 0;
             const remainingBytes = fileSize - uploadedBytes;
             const timeRemaining = speed > 0 ? remainingBytes / speed : null;
 
@@ -227,10 +217,25 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
                 : t
             ));
           }
-        }, 200);
+        }, 300);
 
-        // Clear interval when upload completes
         uploadIntervals.current.set(taskId, progressInterval);
+
+        // Use multipart upload via Supabase client for large files
+        try {
+          const { error: uploadError } = await supabase.storage
+            .from('user-files')
+            .upload(storagePath, fileToUpload, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) throw uploadError;
+        } finally {
+          // Clear the progress simulation interval
+          clearInterval(progressInterval);
+          uploadIntervals.current.delete(taskId);
+        }
       }
 
       setTasks(prev => prev.map(t => 
