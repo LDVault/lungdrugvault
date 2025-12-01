@@ -76,7 +76,7 @@ export const FileUpload = ({ onUploadComplete, currentFolderId }: FileUploadProp
           {isDragging ? 'Drop files to upload' : 'Drag & drop files here'}
         </h3>
         <p className="text-muted-foreground mb-6">
-          or click to browse • Multiple files supported • Max 100MB per file
+          or click to browse • Multiple files supported • No size limit
         </p>
         <Button
           variant="default"
