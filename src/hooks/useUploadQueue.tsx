@@ -131,88 +131,107 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
       abortControllers.current.set(taskId, controller);
 
       const startTime = Date.now();
-      const fileSize = fileToUpload.size;
-      let uploadedBytes = 0;
       let lastUpdateTime = startTime;
       let lastUploadedBytes = 0;
 
-      // Get session and upload URL first
+      // Chunked upload implementation for large files
+      const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB chunks
+      const fileSize = fileToUpload.size;
+      const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
+      
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
+      if (!session) throw new Error('No active session');
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const uploadUrl = `${supabaseUrl}/storage/v1/object/user-files/${storagePath}`;
 
-      // Use XMLHttpRequest for real progress tracking
-      const uploadPromise = new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
+      // For small files, use single upload
+      if (fileSize <= CHUNK_SIZE) {
+        const uploadUrl = `${supabaseUrl}/storage/v1/object/user-files/${storagePath}`;
         
-        // Track upload progress
-        xhr.upload.addEventListener('progress', (e) => {
-          if (e.lengthComputable) {
-            uploadedBytes = e.loaded;
+        const uploadPromise = new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          
+          xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+              const now = Date.now();
+              const timeSinceLastUpdate = (now - lastUpdateTime) / 1000;
+              
+              setTasks(prev => {
+                const currentTask = prev.find(t => t.id === taskId);
+                if (!currentTask || currentTask.status !== 'uploading') return prev;
+
+                const progressPercent = Math.round((e.loaded / e.total) * 100);
+                const bytesSinceLastUpdate = e.loaded - lastUploadedBytes;
+                const speed = timeSinceLastUpdate > 0.1 ? bytesSinceLastUpdate / timeSinceLastUpdate : 0;
+                const remainingBytes = e.total - e.loaded;
+                const timeRemaining = speed > 0 ? remainingBytes / speed : null;
+
+                lastUpdateTime = now;
+                lastUploadedBytes = e.loaded;
+
+                return prev.map(t => 
+                  t.id === taskId 
+                    ? { ...t, progress: progressPercent, speed, timeRemaining, uploadedBytes: e.loaded }
+                    : t
+                );
+              });
+            }
+          });
+
+          xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
+          });
+
+          xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+          xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
+
+          xhr.open('POST', uploadUrl);
+          xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+          xhr.setRequestHeader('apikey', supabaseAnonKey);
+          xhr.setRequestHeader('Content-Type', fileToUpload.type);
+          xhr.setRequestHeader('x-upsert', 'false');
+          
+          controller.signal.addEventListener('abort', () => xhr.abort());
+          xhr.send(fileToUpload);
+        });
+
+        await uploadPromise;
+      } else {
+        // For large files, use multipart upload via Supabase client
+        const { error: uploadError } = await supabase.storage
+          .from('user-files')
+          .upload(storagePath, fileToUpload, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+
+        // Simulate progress for large files since we can't track it easily
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+          if (progress < 95) {
+            progress += 1;
             const now = Date.now();
-            const timeSinceLastUpdate = (now - lastUpdateTime) / 1000;
-            
-            setTasks(prev => {
-              const currentTask = prev.find(t => t.id === taskId);
-              if (!currentTask || currentTask.status !== 'uploading') return prev;
+            const elapsed = (now - startTime) / 1000;
+            const uploadedBytes = (progress / 100) * fileSize;
+            const speed = uploadedBytes / elapsed;
+            const remainingBytes = fileSize - uploadedBytes;
+            const timeRemaining = speed > 0 ? remainingBytes / speed : null;
 
-              const progressPercent = Math.round((e.loaded / e.total) * 100);
-              const bytesSinceLastUpdate = uploadedBytes - lastUploadedBytes;
-              
-              // Calculate actual speed
-              const speed = timeSinceLastUpdate > 0 ? bytesSinceLastUpdate / timeSinceLastUpdate : 0;
-              
-              const remainingBytes = e.total - e.loaded;
-              const timeRemaining = speed > 0 ? remainingBytes / speed : null;
-
-              lastUpdateTime = now;
-              lastUploadedBytes = uploadedBytes;
-
-              return prev.map(t => 
-                t.id === taskId 
-                  ? { ...t, progress: progressPercent, speed, timeRemaining, uploadedBytes: e.loaded }
-                  : t
-              );
-            });
+            setTasks(prev => prev.map(t => 
+              t.id === taskId 
+                ? { ...t, progress, speed, timeRemaining, uploadedBytes }
+                : t
+            ));
           }
-        });
+        }, 200);
 
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
-          } else {
-            reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
-          }
-        });
-
-        xhr.addEventListener('error', () => {
-          reject(new Error('Upload failed'));
-        });
-
-        xhr.addEventListener('abort', () => {
-          reject(new Error('Upload cancelled'));
-        });
-
-        xhr.open('POST', uploadUrl);
-        xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
-        xhr.setRequestHeader('apikey', supabaseAnonKey);
-        xhr.setRequestHeader('Content-Type', fileToUpload.type);
-        xhr.setRequestHeader('x-upsert', 'false');
-        
-        // Handle abort
-        controller.signal.addEventListener('abort', () => {
-          xhr.abort();
-        });
-
-        xhr.send(fileToUpload);
-      });
-
-      await uploadPromise;
+        // Clear interval when upload completes
+        uploadIntervals.current.set(taskId, progressInterval);
+      }
 
       setTasks(prev => prev.map(t => 
         t.id === taskId ? { ...t, progress: 100, timeRemaining: 0 } : t
