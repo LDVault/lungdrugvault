@@ -86,22 +86,29 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
   }, []);
 
   const startUpload = useCallback(async (taskId: string) => {
+    let taskFile: File | null = null;
+    let taskFileName: string = '';
+    
     setTasks(prev => {
       const task = prev.find(t => t.id === taskId);
       if (!task || task.status === 'uploading') return prev;
+      taskFile = task.file;
+      taskFileName = task.file.name;
       return prev.map(t => 
         t.id === taskId ? { ...t, status: 'compressing' as const } : t
       );
     });
 
-    try {
-      const task = tasks.find(t => t.id === taskId);
-      if (!task) return;
+    if (!taskFile) return;
 
+    try {
       // Compress file if it's an image
-      let fileToUpload = task.file;
-      if (task.file.type.startsWith('image/')) {
-        fileToUpload = await compressFile(task.file);
+      let fileToUpload = taskFile;
+      if (taskFile.type.startsWith('image/')) {
+        toast.info(`Compressing ${taskFileName}...`);
+        fileToUpload = await compressFile(taskFile);
+        const compressionRatio = ((1 - fileToUpload.size / taskFile.size) * 100).toFixed(1);
+        toast.success(`Compressed ${taskFileName} by ${compressionRatio}%`);
         setTasks(prev => prev.map(t => 
           t.id === taskId ? { ...t, compressedSize: fileToUpload.size } : t
         ));
@@ -117,7 +124,7 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
         throw new Error("You must be logged in to upload files");
       }
 
-      const fileExt = task.file.name.split('.').pop();
+      const fileExt = taskFileName.split('.').pop();
       const storagePath = `${user.id}/${Date.now()}.${fileExt}`;
 
       const controller = new AbortController();
@@ -173,9 +180,9 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
         .from('files')
         .insert({
           user_id: user.id,
-          name: task.file.name,
+          name: taskFileName,
           size: fileToUpload.size,
-          mime_type: task.file.type,
+          mime_type: fileToUpload.type,
           storage_path: storagePath,
           folder_id: currentFolderId,
         });
@@ -186,7 +193,7 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
         t.id === taskId ? { ...t, status: 'completed' as const, storagePath } : t
       ));
 
-      toast.success(`${task.file.name} uploaded successfully!`);
+      toast.success(`${taskFileName} uploaded successfully!`);
       onUploadComplete();
       
       processingRef.current = false;
@@ -205,9 +212,8 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
           : t
       ));
       
-      const task = tasks.find(t => t.id === taskId);
-      if (task) {
-        toast.error(`Failed to upload ${task.file.name}`);
+      if (taskFileName) {
+        toast.error(`Failed to upload ${taskFileName}`);
       }
       
       processingRef.current = false;

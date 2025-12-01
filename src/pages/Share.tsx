@@ -79,6 +79,16 @@ const Share = () => {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  const getFileUrl = () => {
+    if (!file) return '';
+    const { data } = supabase.storage
+      .from('user-files')
+      .getPublicUrl(file.storage_path);
+    return data.publicUrl;
+  };
+
+  const isVideo = file?.mime_type?.startsWith('video/');
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -101,7 +111,7 @@ const Share = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md border-border bg-card/50 backdrop-blur-sm">
+      <Card className="w-full max-w-4xl border-border bg-card/50 backdrop-blur-sm">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
             <CloudUpload className="w-8 h-8 text-primary" />
@@ -109,9 +119,22 @@ const Share = () => {
           <CardTitle className="text-2xl">Shared File</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-center h-32 bg-secondary/50 rounded-xl">
-            <FileIcon className="w-16 h-16 text-primary" />
-          </div>
+          {isVideo ? (
+            <div className="w-full">
+              <video
+                src={getFileUrl()}
+                controls
+                className="w-full h-auto rounded-xl"
+                controlsList="nodownload"
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-32 bg-secondary/50 rounded-xl">
+              <FileIcon className="w-16 h-16 text-primary" />
+            </div>
+          )}
           <div className="text-center space-y-2">
             <h3 className="font-semibold text-lg">{file.name}</h3>
             <p className="text-sm text-muted-foreground">{formatFileSize(file.size)}</p>
