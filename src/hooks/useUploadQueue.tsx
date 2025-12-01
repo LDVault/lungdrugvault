@@ -132,6 +132,8 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
 
       const startTime = Date.now();
       const fileSize = fileToUpload.size;
+      let lastUpdateTime = startTime;
+      let lastUploadedBytes = 0;
 
       const progressInterval = setInterval(() => {
         setTasks(prev => {
@@ -141,14 +143,29 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
             return prev;
           }
 
-          const elapsed = (Date.now() - startTime) / 1000;
-          const estimatedTotalTime = Math.max(2, fileSize / (500 * 1024));
-          const progressPercent = Math.min(95, (elapsed / estimatedTotalTime) * 100);
+          const now = Date.now();
+          const elapsed = (now - startTime) / 1000;
+          const timeSinceLastUpdate = (now - lastUpdateTime) / 1000;
+          
+          // Use exponential progress estimation that starts fast and slows down
+          const progressPercent = Math.min(95, 100 * (1 - Math.exp(-elapsed / Math.max(1, fileSize / (5 * 1024 * 1024)))));
           
           const bytesUploaded = (progressPercent / 100) * fileSize;
-          const speed = bytesUploaded / elapsed;
+          const bytesSinceLastUpdate = bytesUploaded - lastUploadedBytes;
+          
+          // Calculate instantaneous speed
+          const instantSpeed = timeSinceLastUpdate > 0 ? bytesSinceLastUpdate / timeSinceLastUpdate : 0;
+          
+          // Smooth the speed with exponential moving average
+          const smoothingFactor = 0.3;
+          const currentSpeed = currentTask.speed || 0;
+          const speed = currentSpeed === 0 ? instantSpeed : (smoothingFactor * instantSpeed + (1 - smoothingFactor) * currentSpeed);
+          
           const remainingBytes = fileSize - bytesUploaded;
-          const timeRemaining = remainingBytes / speed;
+          const timeRemaining = speed > 0 ? remainingBytes / speed : null;
+
+          lastUpdateTime = now;
+          lastUploadedBytes = bytesUploaded;
 
           return prev.map(t => 
             t.id === taskId 
