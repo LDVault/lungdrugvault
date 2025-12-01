@@ -132,59 +132,85 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
 
       const startTime = Date.now();
       const fileSize = fileToUpload.size;
+      let uploadedBytes = 0;
       let lastUpdateTime = startTime;
       let lastUploadedBytes = 0;
 
-      const progressInterval = setInterval(() => {
-        setTasks(prev => {
-          const currentTask = prev.find(t => t.id === taskId);
-          if (!currentTask || currentTask.status !== 'uploading') {
-            clearInterval(progressInterval);
-            return prev;
+      // Get session and upload URL first
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const uploadUrl = `${supabaseUrl}/storage/v1/object/user-files/${storagePath}`;
+
+      // Use XMLHttpRequest for real progress tracking
+      const uploadPromise = new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        
+        // Track upload progress
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            uploadedBytes = e.loaded;
+            const now = Date.now();
+            const timeSinceLastUpdate = (now - lastUpdateTime) / 1000;
+            
+            setTasks(prev => {
+              const currentTask = prev.find(t => t.id === taskId);
+              if (!currentTask || currentTask.status !== 'uploading') return prev;
+
+              const progressPercent = Math.round((e.loaded / e.total) * 100);
+              const bytesSinceLastUpdate = uploadedBytes - lastUploadedBytes;
+              
+              // Calculate actual speed
+              const speed = timeSinceLastUpdate > 0 ? bytesSinceLastUpdate / timeSinceLastUpdate : 0;
+              
+              const remainingBytes = e.total - e.loaded;
+              const timeRemaining = speed > 0 ? remainingBytes / speed : null;
+
+              lastUpdateTime = now;
+              lastUploadedBytes = uploadedBytes;
+
+              return prev.map(t => 
+                t.id === taskId 
+                  ? { ...t, progress: progressPercent, speed, timeRemaining, uploadedBytes: e.loaded }
+                  : t
+              );
+            });
           }
-
-          const now = Date.now();
-          const elapsed = (now - startTime) / 1000;
-          const timeSinceLastUpdate = (now - lastUpdateTime) / 1000;
-          
-          // Linear progress estimation - constant speed throughout
-          // Estimate 10 MB/s baseline speed for progress display
-          const estimatedSpeed = 10 * 1024 * 1024; // 10 MB/s
-          const progressPercent = Math.min(95, (elapsed * estimatedSpeed / fileSize) * 100);
-          
-          const bytesUploaded = (progressPercent / 100) * fileSize;
-          const bytesSinceLastUpdate = bytesUploaded - lastUploadedBytes;
-          
-          // Calculate speed based on linear progress
-          const speed = timeSinceLastUpdate > 0 ? bytesSinceLastUpdate / timeSinceLastUpdate : estimatedSpeed;
-          
-          const remainingBytes = fileSize - bytesUploaded;
-          const timeRemaining = speed > 0 ? remainingBytes / speed : null;
-
-          lastUpdateTime = now;
-          lastUploadedBytes = bytesUploaded;
-
-          return prev.map(t => 
-            t.id === taskId 
-              ? { ...t, progress: Math.round(progressPercent), speed, timeRemaining, uploadedBytes: bytesUploaded }
-              : t
-          );
-        });
-      }, 200);
-
-      uploadIntervals.current.set(taskId, progressInterval);
-
-      const { error: uploadError } = await supabase.storage
-        .from('user-files')
-        .upload(storagePath, fileToUpload, {
-          cacheControl: '3600',
-          upsert: false
         });
 
-      clearInterval(progressInterval);
-      uploadIntervals.current.delete(taskId);
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        });
 
-      if (uploadError) throw uploadError;
+        xhr.addEventListener('error', () => {
+          reject(new Error('Upload failed'));
+        });
+
+        xhr.addEventListener('abort', () => {
+          reject(new Error('Upload cancelled'));
+        });
+
+        xhr.open('POST', uploadUrl);
+        xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+        xhr.setRequestHeader('Content-Type', fileToUpload.type);
+        xhr.setRequestHeader('x-upsert', 'false');
+        
+        // Handle abort
+        controller.signal.addEventListener('abort', () => {
+          xhr.abort();
+        });
+
+        xhr.send(fileToUpload);
+      });
+
+      await uploadPromise;
 
       setTasks(prev => prev.map(t => 
         t.id === taskId ? { ...t, progress: 100, timeRemaining: 0 } : t
@@ -214,12 +240,6 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
       processQueue();
 
     } catch (error: any) {
-      const interval = uploadIntervals.current.get(taskId);
-      if (interval) {
-        clearInterval(interval);
-        uploadIntervals.current.delete(taskId);
-      }
-
       setTasks(prev => prev.map(t => 
         t.id === taskId 
           ? { ...t, status: 'failed' as const, error: error.message || "Upload failed" } 
@@ -227,7 +247,7 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
       ));
       
       if (taskFileName) {
-        toast.error(`Failed to upload ${taskFileName}`);
+        toast.error(`Failed to upload ${taskFileName}: ${error.message}`);
       }
       
       processingRef.current = false;
