@@ -147,19 +147,16 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
           const elapsed = (now - startTime) / 1000;
           const timeSinceLastUpdate = (now - lastUpdateTime) / 1000;
           
-          // Use exponential progress estimation that starts fast and slows down
-          const progressPercent = Math.min(95, 100 * (1 - Math.exp(-elapsed / Math.max(1, fileSize / (5 * 1024 * 1024)))));
+          // Linear progress estimation - constant speed throughout
+          // Estimate 10 MB/s baseline speed for progress display
+          const estimatedSpeed = 10 * 1024 * 1024; // 10 MB/s
+          const progressPercent = Math.min(95, (elapsed * estimatedSpeed / fileSize) * 100);
           
           const bytesUploaded = (progressPercent / 100) * fileSize;
           const bytesSinceLastUpdate = bytesUploaded - lastUploadedBytes;
           
-          // Calculate instantaneous speed
-          const instantSpeed = timeSinceLastUpdate > 0 ? bytesSinceLastUpdate / timeSinceLastUpdate : 0;
-          
-          // Smooth the speed with exponential moving average
-          const smoothingFactor = 0.3;
-          const currentSpeed = currentTask.speed || 0;
-          const speed = currentSpeed === 0 ? instantSpeed : (smoothingFactor * instantSpeed + (1 - smoothingFactor) * currentSpeed);
+          // Calculate speed based on linear progress
+          const speed = timeSinceLastUpdate > 0 ? bytesSinceLastUpdate / timeSinceLastUpdate : estimatedSpeed;
           
           const remainingBytes = fileSize - bytesUploaded;
           const timeRemaining = speed > 0 ? remainingBytes / speed : null;
