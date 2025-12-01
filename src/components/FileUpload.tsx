@@ -41,6 +41,8 @@ export const FileUpload = ({ onUploadComplete, currentFolderId }: FileUploadProp
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
       addToQueue(files);
+      // Reset the input so the same file can be selected again
+      e.target.value = '';
     }
   };
 

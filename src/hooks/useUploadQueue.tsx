@@ -7,7 +7,7 @@ export interface UploadTask {
   id: string;
   file: File;
   progress: number;
-  status: 'pending' | 'uploading' | 'paused' | 'completed' | 'failed' | 'compressing';
+  status: 'pending' | 'uploading' | 'paused' | 'completed' | 'failed' | 'compressing' | 'retrying';
   speed: number;
   timeRemaining: number | null;
   error?: string;
@@ -17,6 +17,8 @@ export interface UploadTask {
   uploadedBytes?: number;
   originalSize?: number;
   compressedSize?: number;
+  retryCount?: number;
+  maxRetries?: number;
 }
 
 export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: string | null) => {
@@ -80,6 +82,8 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
       speed: 0,
       timeRemaining: null,
       originalSize: file.size,
+      retryCount: 0,
+      maxRetries: 3,
     }));
 
     setTasks(prev => [...prev, ...newTasks]);
@@ -266,20 +270,60 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
       processQueue();
 
     } catch (error: any) {
-      setTasks(prev => prev.map(t => 
-        t.id === taskId 
-          ? { ...t, status: 'failed' as const, error: error.message || "Upload failed" } 
-          : t
-      ));
-      
-      if (taskFileName) {
-        toast.error(`Failed to upload ${taskFileName}: ${error.message}`);
+      // Check if we should retry
+      const currentTask = tasks.find(t => t.id === taskId);
+      const shouldRetry = currentTask && 
+        currentTask.retryCount !== undefined && 
+        currentTask.maxRetries !== undefined &&
+        currentTask.retryCount < currentTask.maxRetries;
+
+      if (shouldRetry && currentTask) {
+        const retryCount = (currentTask.retryCount || 0) + 1;
+        const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff, max 10s
+        
+        setTasks(prev => prev.map(t => 
+          t.id === taskId 
+            ? { 
+                ...t, 
+                status: 'retrying' as const, 
+                error: `Retry ${retryCount}/${currentTask.maxRetries} in ${retryDelay/1000}s...`,
+                retryCount 
+              } 
+            : t
+        ));
+        
+        toast.info(`Retrying ${taskFileName} (${retryCount}/${currentTask.maxRetries})...`);
+        
+        // Schedule retry with exponential backoff
+        setTimeout(() => {
+          setTasks(prev => prev.map(t => 
+            t.id === taskId ? { ...t, status: 'pending' as const, progress: 0 } : t
+          ));
+          processingRef.current = false;
+          processQueue();
+        }, retryDelay);
+      } else {
+        // Max retries reached or no retry available
+        setTasks(prev => prev.map(t => 
+          t.id === taskId 
+            ? { ...t, status: 'failed' as const, error: error.message || "Upload failed" } 
+            : t
+        ));
+        
+        if (taskFileName) {
+          toast.error(`Failed to upload ${taskFileName}: ${error.message}`);
+        }
+        
+        processingRef.current = false;
+        processQueue();
       }
-      
-      processingRef.current = false;
-      processQueue();
     } finally {
       abortControllers.current.delete(taskId);
+      const interval = uploadIntervals.current.get(taskId);
+      if (interval) {
+        clearInterval(interval);
+        uploadIntervals.current.delete(taskId);
+      }
     }
   }, [tasks, onUploadComplete, currentFolderId, processQueue]);
 
