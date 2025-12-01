@@ -106,6 +106,10 @@ export const UploadQueue = ({ tasks, onPause, onResume, onRemove, onClearComplet
                   <AlertCircle className="w-4 h-4 text-destructive" />
                 )}
                 
+                {task.status === 'retrying' && (
+                  <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+                )}
+                
                 {task.status === 'pending' && (
                   <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                 )}
@@ -135,6 +139,13 @@ export const UploadQueue = ({ tasks, onPause, onResume, onRemove, onClearComplet
                   </p>
                 )}
               </>
+            )}
+
+            {task.status === 'retrying' && (
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+                <p className="text-xs text-orange-500">{task.error || 'Retrying upload...'}</p>
+              </div>
             )}
 
             {task.status === 'uploading' && (
