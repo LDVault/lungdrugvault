@@ -143,6 +143,7 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
       }
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const uploadUrl = `${supabaseUrl}/storage/v1/object/user-files/${storagePath}`;
 
       // Use XMLHttpRequest for real progress tracking
@@ -185,7 +186,7 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
           if (xhr.status >= 200 && xhr.status < 300) {
             resolve();
           } else {
-            reject(new Error(`Upload failed with status ${xhr.status}`));
+            reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
           }
         });
 
@@ -199,6 +200,7 @@ export const useUploadQueue = (onUploadComplete: () => void, currentFolderId?: s
 
         xhr.open('POST', uploadUrl);
         xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+        xhr.setRequestHeader('apikey', supabaseAnonKey);
         xhr.setRequestHeader('Content-Type', fileToUpload.type);
         xhr.setRequestHeader('x-upsert', 'false');
         
