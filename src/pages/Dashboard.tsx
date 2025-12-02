@@ -148,17 +148,17 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-background p-4 sm:p-8">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back! Here's an overview of your storage.</p>
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">Dashboard</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Welcome back! Here's an overview of your storage.</p>
           </div>
           <Button
             onClick={() => navigate("/")}
             variant="outline"
-            className="gap-2 hover-lift"
+            className="gap-2 hover-lift w-full sm:w-auto"
           >
             <Home className="h-4 w-4" />
             Back to Files
@@ -234,41 +234,41 @@ const Dashboard = () => {
         {/* Quick Actions */}
         <Card className="border-border bg-card/50 backdrop-blur-sm animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Get started with common tasks</CardDescription>
+            <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Get started with common tasks</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
               <Button
                 onClick={() => navigate("/")}
-                className="h-auto flex-col gap-2 py-6"
+                className="h-auto flex-col gap-2 py-4 sm:py-6"
                 variant="outline"
               >
-                <Upload className="h-6 w-6" />
+                <Upload className="h-5 w-5 sm:h-6 sm:w-6" />
                 <div className="text-center">
-                  <div className="font-semibold">Upload Files</div>
+                  <div className="font-semibold text-sm sm:text-base">Upload Files</div>
                   <div className="text-xs text-muted-foreground">Add new files to storage</div>
                 </div>
               </Button>
               <Button
                 onClick={() => navigate("/")}
-                className="h-auto flex-col gap-2 py-6"
+                className="h-auto flex-col gap-2 py-4 sm:py-6"
                 variant="outline"
               >
-                <Folder className="h-6 w-6" />
+                <Folder className="h-5 w-5 sm:h-6 sm:w-6" />
                 <div className="text-center">
-                  <div className="font-semibold">Create Folder</div>
+                  <div className="font-semibold text-sm sm:text-base">Create Folder</div>
                   <div className="text-xs text-muted-foreground">Organize your files</div>
                 </div>
               </Button>
               <Button
                 onClick={() => navigate("/shared")}
-                className="h-auto flex-col gap-2 py-6"
+                className="h-auto flex-col gap-2 py-4 sm:py-6"
                 variant="outline"
               >
-                <Share2 className="h-6 w-6" />
+                <Share2 className="h-5 w-5 sm:h-6 sm:w-6" />
                 <div className="text-center">
-                  <div className="font-semibold">View Shared</div>
+                  <div className="font-semibold text-sm sm:text-base">View Shared</div>
                   <div className="text-xs text-muted-foreground">See shared items</div>
                 </div>
               </Button>

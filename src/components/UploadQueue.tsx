@@ -38,10 +38,10 @@ export const UploadQueue = ({ tasks, onPause, onResume, onRemove, onClearComplet
   const completedCount = tasks.filter(t => t.status === 'completed').length;
 
   return (
-    <Card className="fixed bottom-6 right-6 w-96 max-h-[500px] overflow-hidden flex flex-col bg-card border-border shadow-2xl z-50">
-      <div className="p-4 border-b border-border flex items-center justify-between bg-card/95 backdrop-blur-sm">
+    <Card className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 left-4 sm:left-auto w-auto sm:w-96 max-h-[500px] overflow-hidden flex flex-col bg-card border-border shadow-2xl z-50">
+      <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between bg-card/95 backdrop-blur-sm">
         <div>
-          <h3 className="font-semibold text-lg">Upload Queue</h3>
+          <h3 className="font-semibold text-base sm:text-lg">Upload Queue</h3>
           <p className="text-xs text-muted-foreground">
             {tasks.length} {tasks.length === 1 ? 'file' : 'files'}
             {completedCount > 0 && ` • ${completedCount} completed`}
@@ -54,16 +54,16 @@ export const UploadQueue = ({ tasks, onPause, onResume, onRemove, onClearComplet
             onClick={onClearCompleted}
             className="text-xs"
           >
-            Clear completed
+            Clear
           </Button>
         )}
       </div>
 
-      <div className="overflow-y-auto flex-1 p-4 space-y-3">
+      <div className="overflow-y-auto flex-1 p-3 sm:p-4 space-y-2 sm:space-y-3">
         {tasks.map((task) => (
           <div
             key={task.id}
-            className="bg-secondary/30 rounded-lg p-3 space-y-2 border border-border/50"
+            className="bg-secondary/30 rounded-lg p-2 sm:p-3 space-y-2 border border-border/50"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">

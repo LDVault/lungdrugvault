@@ -6,8 +6,10 @@ import { FileGrid } from "@/components/FileGrid";
 import { FolderGrid } from "@/components/FolderGrid";
 import { CreateFolderDialog } from "@/components/CreateFolderDialog";
 import { Button } from "@/components/ui/button";
-import { CloudUpload, LogOut, Shield, Settings, Share2, ArrowLeft, LayoutDashboard, Star } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { CloudUpload, LogOut, Shield, Settings, Share2, ArrowLeft, LayoutDashboard, Star, Menu } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -15,7 +17,9 @@ const Index = () => {
   const [folders, setFolders] = useState<any[]>([]);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isAdmin } = useIsAdmin();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     checkAuth();
@@ -101,22 +105,97 @@ const Index = () => {
     navigate("/auth");
   };
 
+  const NavigationButtons = () => (
+    <>
+      {isAdmin && (
+        <Button
+          variant="outline"
+          onClick={() => {
+            navigate("/admin");
+            setMobileMenuOpen(false);
+          }}
+          className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth w-full justify-start"
+        >
+          <Shield className="w-4 h-4" />
+          Admin Panel
+        </Button>
+      )}
+      <Button
+        variant="outline"
+        onClick={() => {
+          navigate("/dashboard");
+          setMobileMenuOpen(false);
+        }}
+        className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth w-full justify-start"
+      >
+        <LayoutDashboard className="w-4 h-4" />
+        Dashboard
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => {
+          navigate("/favorites");
+          setMobileMenuOpen(false);
+        }}
+        className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth w-full justify-start"
+      >
+        <Star className="w-4 h-4" />
+        Favorites
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => {
+          navigate("/shared");
+          setMobileMenuOpen(false);
+        }}
+        className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth w-full justify-start"
+      >
+        <Share2 className="w-4 h-4" />
+        Shared
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => {
+          navigate("/settings");
+          setMobileMenuOpen(false);
+        }}
+        className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth w-full justify-start"
+      >
+        <Settings className="w-4 h-4" />
+        Settings
+      </Button>
+      <Button
+        variant="ghost"
+        onClick={() => {
+          handleSignOut();
+          setMobileMenuOpen(false);
+        }}
+        className="hover:bg-destructive/10 hover:text-destructive transition-smooth w-full justify-start"
+      >
+        <LogOut className="w-4 h-4" />
+        Sign Out
+      </Button>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Header with Gradient */}
       <header className="border-b border-border bg-gradient-to-r from-card/80 via-card/50 to-card/80 backdrop-blur-md sticky top-0 z-10 shadow-lg animate-fade-in">
-        <div className="container mx-auto px-6 py-5">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center shadow-inner">
-                <CloudUpload className="w-7 h-7 text-primary" />
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center shadow-inner">
+                <CloudUpload className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">CloudVault</h1>
-                <p className="text-xs text-muted-foreground">Secure Cloud Storage</p>
+                <h1 className="text-xl sm:text-3xl font-bold tracking-tight">CloudVault</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">Secure Cloud Storage</p>
               </div>
             </div>
-            <nav className="flex gap-2">
+            
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex gap-2">
               {isAdmin && (
                 <Button
                   variant="outline"
@@ -124,7 +203,7 @@ const Index = () => {
                   className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth"
                 >
                   <Shield className="w-4 h-4" />
-                  <span className="hidden sm:inline">Admin Panel</span>
+                  <span className="hidden lg:inline">Admin Panel</span>
                 </Button>
               )}
               <Button
@@ -133,7 +212,7 @@ const Index = () => {
                 className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth"
               >
                 <LayoutDashboard className="w-4 h-4" />
-                <span className="hidden sm:inline">Dashboard</span>
+                <span className="hidden lg:inline">Dashboard</span>
               </Button>
               <Button
                 variant="outline"
@@ -141,7 +220,7 @@ const Index = () => {
                 className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth"
               >
                 <Star className="w-4 h-4" />
-                <span className="hidden sm:inline">Favorites</span>
+                <span className="hidden lg:inline">Favorites</span>
               </Button>
               <Button
                 variant="outline"
@@ -149,7 +228,7 @@ const Index = () => {
                 className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth"
               >
                 <Share2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Shared</span>
+                <span className="hidden lg:inline">Shared</span>
               </Button>
               <Button
                 variant="outline"
@@ -157,7 +236,7 @@ const Index = () => {
                 className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth"
               >
                 <Settings className="w-4 h-4" />
-                <span className="hidden sm:inline">Settings</span>
+                <span className="hidden lg:inline">Settings</span>
               </Button>
               <Button
                 variant="ghost"
@@ -167,15 +246,29 @@ const Index = () => {
                 <LogOut className="w-4 h-4" />
               </Button>
             </nav>
+
+            {/* Mobile Navigation */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild className="md:hidden">
+                <Button variant="outline" size="icon">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[280px] sm:w-[320px]">
+                <div className="flex flex-col gap-4 mt-8">
+                  <NavigationButtons />
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-10">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {/* Upload Section */}
-        <section className="mb-12 animate-fade-in-up">
+        <section className="mb-8 sm:mb-12 animate-fade-in-up">
           <div className="max-w-4xl mx-auto">
-            <div className="flex gap-4 items-start">
+            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-start">
               <div className="flex-1">
                 <FileUpload onUploadComplete={loadFiles} currentFolderId={currentFolderId} />
               </div>
@@ -190,9 +283,9 @@ const Index = () => {
         
         {/* Content Section */}
         <section>
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 {currentFolderId && (
                   <Button
                     variant="ghost"
@@ -204,10 +297,10 @@ const Index = () => {
                   </Button>
                 )}
                 <div>
-                  <h2 className="text-3xl font-bold tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
                     {currentFolderId ? "Folder Contents" : "Your Storage"}
                   </h2>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                     {currentFolderId ? "Browse files in this folder" : "All your files and folders"}
                   </p>
                 </div>
