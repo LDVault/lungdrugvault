@@ -25,21 +25,24 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AnnouncementBanner />
-        <MaintenanceGuard>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/shared" element={<SharedWithMe />} />
-            <Route path="/share/:token" element={<Share />} />
-            <Route path="/maintenance" element={<Maintenance />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </MaintenanceGuard>
+        <Routes>
+          <Route path="/maintenance" element={<Maintenance />} />
+          <Route path="/share/:token" element={<Share />} />
+          <Route path="*" element={
+            <MaintenanceGuard>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/admin" element={<AdminPanel />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/shared" element={<SharedWithMe />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </MaintenanceGuard>
+          } />
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

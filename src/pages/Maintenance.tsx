@@ -50,26 +50,26 @@ const Maintenance = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-md w-full text-center space-y-6">
-        <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto">
-          <Construction className="w-10 h-10 text-primary" />
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 animate-fade-in">
+      <div className="max-w-md w-full text-center space-y-8">
+        <div className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto shadow-lg animate-scale-in">
+          <Construction className="w-12 h-12 text-primary" />
         </div>
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">Under Maintenance</h1>
-          <p className="text-muted-foreground">
+        <div className="space-y-3">
+          <h1 className="text-4xl font-bold text-foreground">Under Maintenance</h1>
+          <p className="text-muted-foreground text-lg">
             {maintenanceMode?.message || "We are currently performing maintenance. Please check back soon."}
           </p>
         </div>
         
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <LogIn className="mr-2 h-4 w-4" />
+            <Button variant="outline" size="lg" className="hover-lift">
+              <LogIn className="mr-2 h-5 w-5" />
               Admin Login
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="border-border bg-card">
             <DialogHeader>
               <DialogTitle>Admin Login</DialogTitle>
               <DialogDescription>
@@ -86,6 +86,7 @@ const Maintenance = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="bg-secondary/50"
                 />
               </div>
               <div className="space-y-2">
@@ -96,6 +97,7 @@ const Maintenance = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="bg-secondary/50"
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>

@@ -43,14 +43,25 @@ const Auth = () => {
         
         // If not email format, look up username to get email
         if (!isEmail) {
-          const { data: profile, error: profileError } = await supabase
+          const { data: profiles, error: profileError } = await supabase
             .from('profiles')
-            .select('email')
-            .eq('username', emailOrUsername)
-            .maybeSingle();
+            .select('id, email, username')
+            .ilike('username', emailOrUsername)
+            .limit(1);
           
-          if (profileError || !profile?.email) {
+          if (profileError) {
+            console.error('Profile lookup error:', profileError);
             throw new Error('Invalid username or password');
+          }
+          
+          if (!profiles || profiles.length === 0) {
+            throw new Error('Invalid username or password');
+          }
+          
+          const profile = profiles[0];
+          
+          if (!profile.email) {
+            throw new Error('Account configuration error. Please contact support.');
           }
           
           loginEmail = profile.email;
@@ -64,6 +75,21 @@ const Auth = () => {
         
         toast.success("Welcome back!");
       } else {
+        if (!username || username.length < 3) {
+          throw new Error('Username must be at least 3 characters');
+        }
+        
+        // Check if username already exists
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('username')
+          .ilike('username', username)
+          .maybeSingle();
+        
+        if (existingProfile) {
+          throw new Error('Username already taken');
+        }
+        
         const { data, error } = await supabase.auth.signUp({
           email: emailOrUsername,
           password,
@@ -79,6 +105,7 @@ const Auth = () => {
         toast.success("Account created! You can now log in.");
       }
     } catch (error: any) {
+      console.error('Auth error:', error);
       toast.error(error.message || "Authentication failed");
     } finally {
       setLoading(false);
