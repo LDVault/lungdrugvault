@@ -114,7 +114,7 @@ const Index = () => {
             navigate("/admin");
             setMobileMenuOpen(false);
           }}
-          className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth w-full justify-start"
+          className="gap-2 border-border/50 hover:bg-accent/80 hover:border-primary/50 transition-smooth w-full justify-start"
         >
           <Shield className="w-4 h-4" />
           Admin Panel
@@ -181,15 +181,15 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Header with Gradient */}
-      <header className="border-b border-border bg-gradient-to-r from-card/80 via-card/50 to-card/80 backdrop-blur-md sticky top-0 z-10 shadow-lg animate-fade-in">
+      <header className="border-b border-border/50 bg-gradient-to-r from-card/95 via-card/80 to-card/95 backdrop-blur-xl sticky top-0 z-10 shadow-xl animate-fade-in">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center shadow-inner">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary/30 to-primary/10 rounded-2xl flex items-center justify-center shadow-lg">
                 <CloudUpload className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-3xl font-bold tracking-tight">CloudVault</h1>
+                <h1 className="text-xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">CloudVault</h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">Secure Cloud Storage</p>
               </div>
             </div>
@@ -200,7 +200,7 @@ const Index = () => {
                 <Button
                   variant="outline"
                   onClick={() => navigate("/admin")}
-                  className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth"
+                  className="gap-2 border-border/50 hover:bg-accent/80 hover:border-primary/50 transition-smooth hover-lift"
                 >
                   <Shield className="w-4 h-4" />
                   <span className="hidden lg:inline">Admin Panel</span>
@@ -209,7 +209,7 @@ const Index = () => {
               <Button
                 variant="outline"
                 onClick={() => navigate("/dashboard")}
-                className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth"
+                className="gap-2 border-border/50 hover:bg-accent/80 hover:border-primary/50 transition-smooth hover-lift"
               >
                 <LayoutDashboard className="w-4 h-4" />
                 <span className="hidden lg:inline">Dashboard</span>
@@ -217,7 +217,7 @@ const Index = () => {
               <Button
                 variant="outline"
                 onClick={() => navigate("/favorites")}
-                className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth"
+                className="gap-2 border-border/50 hover:bg-accent/80 hover:border-primary/50 transition-smooth hover-lift"
               >
                 <Star className="w-4 h-4" />
                 <span className="hidden lg:inline">Favorites</span>
@@ -225,7 +225,7 @@ const Index = () => {
               <Button
                 variant="outline"
                 onClick={() => navigate("/shared")}
-                className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth"
+                className="gap-2 border-border/50 hover:bg-accent/80 hover:border-primary/50 transition-smooth hover-lift"
               >
                 <Share2 className="w-4 h-4" />
                 <span className="hidden lg:inline">Shared</span>
@@ -233,7 +233,7 @@ const Index = () => {
               <Button
                 variant="outline"
                 onClick={() => navigate("/settings")}
-                className="gap-2 border-border hover:bg-accent hover:border-primary/30 transition-smooth"
+                className="gap-2 border-border/50 hover:bg-accent/80 hover:border-primary/50 transition-smooth hover-lift"
               >
                 <Settings className="w-4 h-4" />
                 <span className="hidden lg:inline">Settings</span>
