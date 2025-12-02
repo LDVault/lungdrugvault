@@ -148,17 +148,17 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">Dashboard</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent mb-2">Dashboard</h1>
             <p className="text-sm sm:text-base text-muted-foreground">Welcome back! Here's an overview of your storage.</p>
           </div>
           <Button
             onClick={() => navigate("/")}
             variant="outline"
-            className="gap-2 hover-lift w-full sm:w-auto"
+            className="gap-2 hover-lift w-full sm:w-auto border-border/50 hover:bg-accent/80 hover:border-primary/50"
           >
             <Home className="h-4 w-4" />
             Back to Files
@@ -167,10 +167,10 @@ const Dashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-border bg-card/50 backdrop-blur-sm hover-lift animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          <Card className="border-border/50 glass-effect hover-lift animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-primary/10 rounded-lg">
+                <div className="p-2 bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg shadow-inner">
                   <HardDrive className="h-5 w-5 text-primary" />
                 </div>
                 <CardTitle className="text-lg">Storage Used</CardTitle>
@@ -185,11 +185,11 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/50 backdrop-blur-sm hover-lift animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <Card className="border-border/50 glass-effect hover-lift animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-blue-500/10 rounded-lg">
-                  <File className="h-5 w-5 text-blue-500" />
+                <div className="p-2 bg-gradient-to-br from-blue-500/20 to-blue-500/10 rounded-lg shadow-inner">
+                  <File className="h-5 w-5 text-blue-400" />
                 </div>
                 <CardTitle className="text-lg">Total Files</CardTitle>
               </div>
@@ -200,11 +200,11 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/50 backdrop-blur-sm hover-lift animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <Card className="border-border/50 glass-effect hover-lift animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-green-500/10 rounded-lg">
-                  <Folder className="h-5 w-5 text-green-500" />
+                <div className="p-2 bg-gradient-to-br from-green-500/20 to-green-500/10 rounded-lg shadow-inner">
+                  <Folder className="h-5 w-5 text-green-400" />
                 </div>
                 <CardTitle className="text-lg">Folders</CardTitle>
               </div>
@@ -215,11 +215,11 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/50 backdrop-blur-sm hover-lift animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <Card className="border-border/50 glass-effect hover-lift animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-purple-500/10 rounded-lg">
-                  <Share2 className="h-5 w-5 text-purple-500" />
+                <div className="p-2 bg-gradient-to-br from-purple-500/20 to-purple-500/10 rounded-lg shadow-inner">
+                  <Share2 className="h-5 w-5 text-purple-400" />
                 </div>
                 <CardTitle className="text-lg">Shared With Me</CardTitle>
               </div>
@@ -232,7 +232,7 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <Card className="border-border bg-card/50 backdrop-blur-sm animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+        <Card className="border-border/50 glass-effect animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
           <CardHeader>
             <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
             <CardDescription className="text-xs sm:text-sm">Get started with common tasks</CardDescription>
@@ -241,7 +241,7 @@ const Dashboard = () => {
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
               <Button
                 onClick={() => navigate("/")}
-                className="h-auto flex-col gap-2 py-4 sm:py-6"
+                className="h-auto flex-col gap-2 py-4 sm:py-6 bg-gradient-to-br from-primary/10 to-accent/10 hover:from-primary/20 hover:to-accent/20 border border-border/50"
                 variant="outline"
               >
                 <Upload className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -277,7 +277,7 @@ const Dashboard = () => {
         </Card>
 
         {/* Recent Files */}
-        <Card className="border-border bg-card/50 backdrop-blur-sm animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+        <Card className="border-border/50 glass-effect animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-primary" />
@@ -299,7 +299,7 @@ const Dashboard = () => {
                 {recentFiles.map((file) => (
                   <div
                     key={file.id}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/50 transition-all cursor-pointer border border-transparent hover:border-primary/20 hover-lift"
                     onClick={() => navigate("/")}
                   >
                     <div className="p-2 bg-primary/10 rounded-lg">
@@ -321,9 +321,9 @@ const Dashboard = () => {
 
         {/* Storage Warning */}
         {storagePercentage > 80 && (
-          <Card className="border-orange-500/50 bg-orange-500/10 backdrop-blur-sm animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
+          <Card className="border-orange-500/50 bg-gradient-to-br from-orange-500/10 to-orange-500/5 backdrop-blur-xl animate-fade-in-up shadow-lg hover-lift" style={{ animationDelay: '0.7s' }}>
             <CardHeader>
-              <CardTitle className="text-orange-500">Storage Warning</CardTitle>
+              <CardTitle className="text-orange-400">Storage Warning</CardTitle>
               <CardDescription>You're running low on storage space</CardDescription>
             </CardHeader>
             <CardContent>

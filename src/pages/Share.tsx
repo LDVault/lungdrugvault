@@ -11,6 +11,7 @@ const Share = () => {
   const [file, setFile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string>('');
 
   useEffect(() => {
     loadSharedFile();
@@ -36,6 +37,12 @@ const Share = () => {
       if (shareError) throw shareError;
 
       setFile(shareData.files);
+      
+      // Get signed URL for video if it's a video file
+      if (shareData.files?.mime_type?.startsWith('video/')) {
+        const url = await getFileUrl();
+        setVideoUrl(url);
+      }
     } catch (error: any) {
       toast.error("Failed to load shared file");
     } finally {
@@ -79,12 +86,19 @@ const Share = () => {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const getFileUrl = () => {
+  const getFileUrl = async () => {
     if (!file) return '';
-    const { data } = supabase.storage
-      .from('user-files')
-      .getPublicUrl(file.storage_path);
-    return data.publicUrl;
+    try {
+      const { data, error } = await supabase.storage
+        .from('user-files')
+        .createSignedUrl(file.storage_path, 3600); // 1 hour expiry
+      
+      if (error) throw error;
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Error getting signed URL:', error);
+      return '';
+    }
   };
 
   const isVideo = file?.mime_type?.startsWith('video/');
@@ -110,46 +124,48 @@ const Share = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-4xl border-border bg-card/50 backdrop-blur-sm">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
-            <CloudUpload className="w-8 h-8 text-primary" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4">
+      <Card className="w-full max-w-4xl border-border/50 bg-card/80 backdrop-blur-xl shadow-2xl hover-lift">
+        <CardHeader className="text-center space-y-4 pb-8">
+          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-3xl flex items-center justify-center mb-2 shadow-lg">
+            <CloudUpload className="w-10 h-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Shared File</CardTitle>
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Shared File</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isVideo ? (
-            <div className="w-full">
+          {isVideo && videoUrl ? (
+            <div className="w-full rounded-2xl overflow-hidden shadow-2xl bg-black">
               <video
-                src={getFileUrl()}
+                src={videoUrl}
                 controls
-                className="w-full h-auto rounded-xl"
+                className="w-full h-auto"
                 controlsList="nodownload"
               >
                 Your browser does not support the video tag.
               </video>
             </div>
-          ) : (
-            <div className="flex items-center justify-center h-32 bg-secondary/50 rounded-xl">
-              <FileIcon className="w-16 h-16 text-primary" />
+          ) : !isVideo && (
+            <div className="flex items-center justify-center h-40 bg-gradient-to-br from-secondary/50 to-accent/20 rounded-2xl border border-border/50">
+              <FileIcon className="w-20 h-20 text-primary/70" />
             </div>
           )}
-          <div className="text-center space-y-2">
-            <h3 className="font-semibold text-lg">{file.name}</h3>
-            <p className="text-sm text-muted-foreground">{formatFileSize(file.size)}</p>
-            {file.profiles?.username && (
-              <p className="text-xs text-muted-foreground">
-                Shared by @{file.profiles.username}
-              </p>
-            )}
+          <div className="text-center space-y-3 py-4">
+            <h3 className="font-bold text-xl">{file.name}</h3>
+            <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground">
+              <span className="px-3 py-1 bg-secondary/50 rounded-full">{formatFileSize(file.size)}</span>
+              {file.profiles?.username && (
+                <span className="px-3 py-1 bg-secondary/50 rounded-full">
+                  Shared by @{file.profiles.username}
+                </span>
+              )}
+            </div>
           </div>
           <Button
             onClick={downloadFile}
             disabled={downloading}
-            className="w-full bg-primary hover:bg-primary/90"
+            className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg hover:shadow-xl transition-all text-primary-foreground font-semibold py-6 rounded-xl"
           >
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-5 h-5 mr-2" />
             {downloading ? "Downloading..." : "Download File"}
           </Button>
         </CardContent>
