@@ -1,4 +1,4 @@
-import { X, Pause, Play, Trash2, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { X, Pause, Play, Trash2, CheckCircle2, AlertCircle, Loader2, Upload } from "lucide-react";
 import { Button } from "./ui/button";
 import { Progress } from "./ui/progress";
 import { Card } from "./ui/card";
@@ -38,21 +38,26 @@ export const UploadQueue = ({ tasks, onPause, onResume, onRemove, onClearComplet
   const completedCount = tasks.filter(t => t.status === 'completed').length;
 
   return (
-    <Card className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 left-4 sm:left-auto w-auto sm:w-96 max-h-[500px] overflow-hidden flex flex-col bg-card border-border shadow-2xl z-50">
-      <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between bg-card/95 backdrop-blur-sm">
-        <div>
-          <h3 className="font-semibold text-base sm:text-lg">Upload Queue</h3>
-          <p className="text-xs text-muted-foreground">
-            {tasks.length} {tasks.length === 1 ? 'file' : 'files'}
-            {completedCount > 0 && ` • ${completedCount} completed`}
-          </p>
+    <Card className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 left-4 sm:left-auto w-auto sm:w-96 max-h-[500px] overflow-hidden flex flex-col bg-card/95 backdrop-blur-xl border-border shadow-2xl z-50 animate-slide-in-right">
+      <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-card/95 to-card/80 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
+            <Upload className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-bold text-base sm:text-lg">Upload Queue</h3>
+            <p className="text-xs text-muted-foreground">
+              {tasks.length} {tasks.length === 1 ? 'file' : 'files'}
+              {completedCount > 0 && ` • ${completedCount} completed`}
+            </p>
+          </div>
         </div>
         {completedCount > 0 && (
           <Button
             size="sm"
             variant="ghost"
             onClick={onClearCompleted}
-            className="text-xs"
+            className="text-xs hover:bg-secondary transition-all"
           >
             Clear
           </Button>
@@ -60,10 +65,11 @@ export const UploadQueue = ({ tasks, onPause, onResume, onRemove, onClearComplet
       </div>
 
       <div className="overflow-y-auto flex-1 p-3 sm:p-4 space-y-2 sm:space-y-3">
-        {tasks.map((task) => (
+        {tasks.map((task, index) => (
           <div
             key={task.id}
-            className="bg-secondary/30 rounded-lg p-2 sm:p-3 space-y-2 border border-border/50"
+            className="bg-secondary/30 rounded-lg p-2 sm:p-3 space-y-2 border border-border/50 hover:border-primary/30 transition-all duration-300 animate-fade-in-up hover-lift"
+            style={{ animationDelay: `${index * 0.05}s` }}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
@@ -131,11 +137,11 @@ export const UploadQueue = ({ tasks, onPause, onResume, onRemove, onClearComplet
               <>
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  <p className="text-xs text-muted-foreground">Compressing image...</p>
+                  <p className="text-xs text-muted-foreground font-medium">Compressing image...</p>
                 </div>
                 {task.originalSize && task.compressedSize && (
-                  <p className="text-xs text-green-600 dark:text-green-400">
-                    Reduced from {formatFileSize(task.originalSize)} to {formatFileSize(task.compressedSize)}
+                  <p className="text-xs text-green-500 font-medium">
+                    ✨ Reduced from {formatFileSize(task.originalSize)} to {formatFileSize(task.compressedSize)}
                   </p>
                 )}
               </>
@@ -144,16 +150,16 @@ export const UploadQueue = ({ tasks, onPause, onResume, onRemove, onClearComplet
             {task.status === 'retrying' && (
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
-                <p className="text-xs text-orange-500">{task.error || 'Retrying upload...'}</p>
+                <p className="text-xs text-orange-500 font-medium">{task.error || 'Retrying upload...'}</p>
               </div>
             )}
 
             {task.status === 'uploading' && (
               <>
-                <Progress value={task.progress} className="h-1.5" />
+                <Progress value={task.progress} className="h-2 animate-pulse" />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{task.speed > 0 ? formatSpeed(task.speed) : "Calculating..."}</span>
-                  <span>{task.progress}%</span>
+                  <span className="font-medium">{task.speed > 0 ? formatSpeed(task.speed) : "Calculating..."}</span>
+                  <span className="font-bold text-primary">{task.progress}%</span>
                   <span>
                     {task.timeRemaining !== null 
                       ? formatTimeRemaining(task.timeRemaining)
@@ -165,25 +171,29 @@ export const UploadQueue = ({ tasks, onPause, onResume, onRemove, onClearComplet
 
             {task.status === 'paused' && (
               <>
-                <Progress value={task.progress} className="h-1.5" />
-                <p className="text-xs text-muted-foreground">
-                  Paused at {task.progress}%
+                <Progress value={task.progress} className="h-2" />
+                <p className="text-xs text-muted-foreground font-medium">
+                  ⏸️ Paused at {task.progress}%
                 </p>
               </>
             )}
 
             {task.status === 'pending' && (
-              <p className="text-xs text-muted-foreground">Waiting to upload...</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-2">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Waiting to upload...
+              </p>
             )}
 
             {task.status === 'completed' && (
-              <p className="text-xs text-green-600 dark:text-green-400">
+              <p className="text-xs text-green-500 font-medium flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3" />
                 Upload completed successfully
               </p>
             )}
 
             {task.status === 'failed' && (
-              <p className="text-xs text-destructive">{task.error || "Upload failed"}</p>
+              <p className="text-xs text-destructive font-medium">{task.error || "Upload failed"}</p>
             )}
           </div>
         ))}

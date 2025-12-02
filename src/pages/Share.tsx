@@ -61,13 +61,20 @@ const Share = () => {
     
     try {
       setDownloading(true);
-      const { data, error } = await supabase.storage
+      
+      // Get signed URL for download
+      const { data: signedUrlData, error: urlError } = await supabase.storage
         .from('user-files')
-        .download(file.storage_path);
+        .createSignedUrl(file.storage_path, 60);
 
-      if (error) throw error;
-
-      const url = URL.createObjectURL(data);
+      if (urlError) throw urlError;
+      
+      // Fetch the file
+      const response = await fetch(signedUrlData.signedUrl);
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = file.name;
@@ -78,6 +85,7 @@ const Share = () => {
       
       toast.success("Download started!");
     } catch (error: any) {
+      console.error('Download error:', error);
       toast.error("Failed to download file");
     } finally {
       setDownloading(false);

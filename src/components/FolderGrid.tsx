@@ -132,17 +132,17 @@ export const FolderGrid = ({ folders, onFolderDeleted, onFolderClick }: FolderGr
           onDragOver={(e) => handleDragOver(e, folder.id)}
           onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, folder.id)}
-          className={`group bg-card/50 backdrop-blur-sm border-border hover:border-primary/50 transition-smooth overflow-hidden cursor-pointer hover-lift animate-fade-in-up ${
-            dragOverFolder === folder.id ? 'border-primary border-2 bg-primary/10 scale-105' : ''
+          className={`group bg-card/50 backdrop-blur-sm border-border hover:border-primary/50 transition-all duration-300 overflow-hidden cursor-pointer hover-lift hover:shadow-xl animate-fade-in-up ${
+            dragOverFolder === folder.id ? 'border-primary border-2 bg-primary/10 scale-110 shadow-2xl shadow-primary/30 rotate-1' : ''
           }`}
           style={{ animationDelay: `${index * 0.05}s` }}
         >
           <CardContent className="p-6" onClick={() => onFolderClick(folder.id)}>
-            <div className="flex items-center justify-center h-32 mb-4 bg-secondary/50 rounded-xl relative">
-              <Folder className="w-16 h-16 text-primary" />
+            <div className="flex items-center justify-center h-32 mb-4 bg-secondary/30 rounded-xl relative transition-all group-hover:scale-105">
+              <Folder className="w-16 h-16 text-primary transition-transform group-hover:scale-110" />
               {dragOverFolder === folder.id && (
-                <div className="absolute inset-0 flex items-center justify-center bg-primary/20 rounded-xl">
-                  <FolderInput className="w-12 h-12 text-primary animate-pulse" />
+                <div className="absolute inset-0 flex items-center justify-center bg-primary/20 rounded-xl animate-pulse">
+                  <FolderInput className="w-12 h-12 text-primary animate-bounce" />
                 </div>
               )}
             </div>
