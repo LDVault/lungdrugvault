@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Shield, ArrowLeft, KeyRound, Megaphone, Wrench, UserCog, Trash2, Users, HardDrive } from "lucide-react";
+import { Shield, ArrowLeft, KeyRound, Megaphone, Wrench, UserCog, Trash2, Users, HardDrive, UserCircle } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,6 +31,8 @@ const AdminPanel = () => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [usernameDialogOpen, setUsernameDialogOpen] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
   
   const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = useState("");
@@ -156,6 +158,36 @@ const AdminPanel = () => {
     }
   };
 
+  const handleChangeUsername = async () => {
+    if (!selectedUser || !newUsername) {
+      toast.error("Please enter a new username");
+      return;
+    }
+
+    if (newUsername.length < 3) {
+      toast.error("Username must be at least 3 characters");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ username: newUsername })
+        .eq('id', selectedUser.id);
+
+      if (error) throw error;
+
+      toast.success(`Username updated to @${newUsername}`);
+      setUsernameDialogOpen(false);
+      setNewUsername("");
+      setSelectedUser(null);
+      await fetchUsers();
+    } catch (error: any) {
+      console.error("Error changing username:", error);
+      toast.error("Failed to change username");
+    }
+  };
+
   const handleUpdateMaintenance = async () => {
     try {
       const { error } = await supabase
@@ -220,7 +252,10 @@ const AdminPanel = () => {
   if (adminLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground">Loading...</p>
+        <div className="animate-pulse space-y-4">
+          <div className="w-16 h-16 bg-primary/20 rounded-full mx-auto animate-bounce" />
+          <p className="text-muted-foreground">Loading admin panel...</p>
+        </div>
       </div>
     );
   }
@@ -230,9 +265,9 @@ const AdminPanel = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-8 animate-fade-in">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-8 animate-fade-in-up">
           <Button
             variant="ghost"
             size="icon"
@@ -253,7 +288,7 @@ const AdminPanel = () => {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3 mb-6">
-          <Card className="border-border bg-card/50 backdrop-blur-sm">
+          <Card className="border-border bg-card/50 backdrop-blur-sm hover-lift animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" />
@@ -266,7 +301,7 @@ const AdminPanel = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/50 backdrop-blur-sm">
+          <Card className="border-border bg-card/50 backdrop-blur-sm hover-lift animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <HardDrive className="w-5 h-5 text-primary" />
@@ -279,7 +314,7 @@ const AdminPanel = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/50 backdrop-blur-sm">
+          <Card className="border-border bg-card/50 backdrop-blur-sm hover-lift animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
@@ -296,7 +331,7 @@ const AdminPanel = () => {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 mb-6">
-          <Card className="border-border bg-card/50 backdrop-blur-sm">
+          <Card className="border-border bg-card/50 backdrop-blur-sm hover-lift animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Wrench className="w-5 h-5 text-primary" />
@@ -329,7 +364,7 @@ const AdminPanel = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/50 backdrop-blur-sm">
+          <Card className="border-border bg-card/50 backdrop-blur-sm hover-lift animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Megaphone className="w-5 h-5 text-primary" />
@@ -376,7 +411,7 @@ const AdminPanel = () => {
           </Card>
         </div>
 
-        <Card className="border-border bg-card/50 backdrop-blur-sm">
+        <Card className="border-border bg-card/50 backdrop-blur-sm hover-lift animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
           <CardHeader>
             <CardTitle>User Management</CardTitle>
             <CardDescription>View and manage all registered users</CardDescription>
@@ -423,6 +458,52 @@ const AdminPanel = () => {
                           <UserCog className="h-4 w-4" />
                           {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
                         </Button>
+                        <Dialog open={usernameDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
+                          setUsernameDialogOpen(open);
+                          if (!open) {
+                            setSelectedUser(null);
+                            setNewUsername("");
+                          }
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedUser(user)}
+                              className="gap-2"
+                            >
+                              <UserCircle className="h-4 w-4" />
+                              Change Username
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="border-border bg-card">
+                            <DialogHeader>
+                              <DialogTitle>Change Username</DialogTitle>
+                              <DialogDescription>
+                                Enter a new username for {user.email}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="newUsername">New Username</Label>
+                                <Input
+                                  id="newUsername"
+                                  type="text"
+                                  value={newUsername}
+                                  onChange={(e) => setNewUsername(e.target.value)}
+                                  placeholder="Enter new username (min 3 characters)"
+                                  className="bg-secondary/50"
+                                />
+                              </div>
+                              <Button
+                                onClick={handleChangeUsername}
+                                className="w-full bg-primary hover:bg-primary/90"
+                              >
+                                Update Username
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                         <Dialog open={resetDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
                           setResetDialogOpen(open);
                           if (!open) {
