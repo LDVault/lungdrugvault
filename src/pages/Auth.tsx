@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { CloudUpload } from "lucide-react";
-
 const Auth = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
@@ -15,93 +14,88 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
-
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: {
+        subscription
+      }
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         navigate("/");
       }
     });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({
+      data: {
+        session
+      }
+    }) => {
       if (session) {
         navigate("/");
       }
     });
-
     return () => subscription.unsubscribe();
   }, [navigate]);
-
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       if (isLogin) {
         const isEmail = emailOrUsername.includes('@');
         let loginEmail = emailOrUsername;
-        
+
         // If not email format, look up username to get email
         if (!isEmail) {
-          const { data: profiles, error: profileError } = await supabase
-            .from('profiles')
-            .select('id, email, username')
-            .ilike('username', emailOrUsername)
-            .limit(1);
-          
+          const {
+            data: profiles,
+            error: profileError
+          } = await supabase.from('profiles').select('id, email, username').ilike('username', emailOrUsername).limit(1);
           if (profileError) {
             console.error('Profile lookup error:', profileError);
             throw new Error('Invalid username or password');
           }
-          
           if (!profiles || profiles.length === 0) {
             throw new Error('Invalid username or password');
           }
-          
           const profile = profiles[0];
-          
           if (!profile.email) {
             throw new Error('Account configuration error. Please contact support.');
           }
-          
           loginEmail = profile.email;
         }
-        
-        const { error } = await supabase.auth.signInWithPassword({
+        const {
+          error
+        } = await supabase.auth.signInWithPassword({
           email: loginEmail,
-          password,
+          password
         });
         if (error) throw error;
-        
         toast.success("Welcome back!");
       } else {
         if (!username || username.length < 3) {
           throw new Error('Username must be at least 3 characters');
         }
-        
+
         // Check if username already exists
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('username')
-          .ilike('username', username)
-          .maybeSingle();
-        
+        const {
+          data: existingProfile
+        } = await supabase.from('profiles').select('username').ilike('username', username).maybeSingle();
         if (existingProfile) {
           throw new Error('Username already taken');
         }
-        
-        const { data, error } = await supabase.auth.signUp({
+        const {
+          data,
+          error
+        } = await supabase.auth.signUp({
           email: emailOrUsername,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
             data: {
-              username: username,
-            },
-          },
+              username: username
+            }
+          }
         });
         if (error) throw error;
-        
         toast.success("Account created! You can now log in.");
       }
     } catch (error: any) {
@@ -111,82 +105,45 @@ const Auth = () => {
       setLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+  return <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md border-border bg-card/50 backdrop-blur-sm animate-scale-in">
         <CardHeader className="space-y-3 text-center">
           <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
             <CloudUpload className="w-8 h-8 text-primary" />
           </div>
-          <CardTitle className="text-3xl font-bold">CloudVault</CardTitle>
+          <CardTitle className="text-3xl font-bold">LDVault
+        </CardTitle>
           <CardDescription className="text-muted-foreground">
             {isLogin ? "Sign in to access your files" : "Create an account to get started"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-4">
-            {!isLogin && (
-              <div className="space-y-2">
+            {!isLogin && <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="Choose a username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required={!isLogin}
-                  className="bg-secondary/50"
-                />
-              </div>
-            )}
+                <Input id="username" type="text" placeholder="Choose a username" value={username} onChange={e => setUsername(e.target.value)} required={!isLogin} className="bg-secondary/50" />
+              </div>}
             <div className="space-y-2">
               <Label htmlFor="emailOrUsername">
                 {isLogin ? "Email or Username" : "Email"}
               </Label>
-              <Input
-                id="emailOrUsername"
-                type={isLogin ? "text" : "email"}
-                placeholder={isLogin ? "email or username" : "you@example.com"}
-                value={emailOrUsername}
-                onChange={(e) => setEmailOrUsername(e.target.value)}
-                required
-                className="bg-secondary/50"
-              />
+              <Input id="emailOrUsername" type={isLogin ? "text" : "email"} placeholder={isLogin ? "email or username" : "you@example.com"} value={emailOrUsername} onChange={e => setEmailOrUsername(e.target.value)} required className="bg-secondary/50" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="bg-secondary/50"
-              />
+              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} className="bg-secondary/50" />
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={loading}>
               {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
             </Button>
           </form>
           <div className="mt-4 text-center">
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-muted-foreground hover:text-primary transition-smooth"
-            >
+            <button onClick={() => setIsLogin(!isLogin)} className="text-sm text-muted-foreground hover:text-primary transition-smooth">
               {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
             </button>
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default Auth;
