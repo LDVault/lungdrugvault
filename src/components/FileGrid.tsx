@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { FileIcon, Trash2, Share2, Download, Copy, Check, Users, Play, FolderInput, Eye } from "lucide-react";
 import { VideoPlayer } from "./VideoPlayer";
 import { FilePreview } from "./FilePreview";
+import { FileThumbnail } from "./FileThumbnail";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -270,23 +271,16 @@ export const FileGrid = ({ files, onFileDeleted, isSharedView = false, currentFo
           draggable
           onDragStart={(e) => handleDragStart(e, file.id)}
           onDragEnd={handleDragEnd}
-          className={`group bg-card/50 backdrop-blur-sm border-border hover:border-primary/50 transition-smooth overflow-hidden cursor-move hover-lift animate-fade-in-up ${
-            draggedFile === file.id ? 'opacity-50 scale-95' : ''
+          className={`group bg-card/50 backdrop-blur-sm border-border hover:border-primary/50 transition-all duration-300 overflow-hidden cursor-move hover-lift hover:shadow-xl animate-fade-in-up ${
+            draggedFile === file.id ? 'opacity-30 scale-90 rotate-3' : ''
           }`}
           style={{ animationDelay: `${index * 0.05}s` }}
         >
           <CardContent className="p-6">
-            <div 
-              className="flex items-center justify-center h-32 mb-4 bg-secondary/50 rounded-xl relative group cursor-pointer"
+            <FileThumbnail 
+              file={file} 
               onClick={() => isVideoFile(file.mime_type) && playVideo(file)}
-            >
-              <FileIcon className="w-16 h-16 text-primary" />
-              {isVideoFile(file.mime_type) && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play className="w-12 h-12 text-white" />
-                </div>
-              )}
-            </div>
+            />
             <h3 className="font-semibold truncate mb-1" title={file.name}>
               {file.name}
             </h3>

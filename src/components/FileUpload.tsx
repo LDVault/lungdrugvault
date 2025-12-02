@@ -61,30 +61,34 @@ export const FileUpload = ({ onUploadComplete, currentFolderId }: FileUploadProp
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`
-          relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300
+          relative border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center transition-all duration-500 ease-out
           ${isDragging 
-            ? 'border-primary bg-primary/10 scale-[1.02] shadow-lg shadow-primary/20' 
-            : 'border-border hover:border-primary/50 bg-card/50 hover:shadow-md'
+            ? 'border-primary bg-primary/10 scale-105 shadow-2xl shadow-primary/30 rotate-1' 
+            : 'border-border hover:border-primary/50 bg-card/50 hover:shadow-xl hover:scale-[1.01]'
           }
         `}
       >
         {isDragging && (
           <div className="absolute inset-0 bg-primary/5 rounded-2xl animate-pulse" />
         )}
-        <div className={`relative ${isDragging ? 'animate-bounce' : ''}`}>
-          <Upload className={`w-16 h-16 mx-auto mb-4 transition-all duration-300 ${isDragging ? 'text-primary scale-110' : 'text-primary'}`} />
+        <div className={`relative transition-all duration-300 ${isDragging ? 'scale-110' : ''}`}>
+          <div className={`w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center ${isDragging ? 'animate-bounce' : ''}`}>
+            <Upload className={`w-8 h-8 sm:w-10 sm:h-10 transition-all duration-300 ${isDragging ? 'text-primary' : 'text-primary'}`} />
+          </div>
         </div>
-        <h3 className="text-xl font-semibold mb-2">
-          {isDragging ? 'Drop files to upload' : 'Drag & drop files here'}
+        <h3 className="text-lg sm:text-xl font-bold mb-2 transition-all">
+          {isDragging ? '✨ Drop to upload ✨' : 'Drag & drop files here'}
         </h3>
-        <p className="text-muted-foreground mb-6">
-          or click to browse • Multiple files supported • No size limit
+        <p className="text-sm sm:text-base text-muted-foreground mb-6">
+          or click below to browse • Multiple files supported
         </p>
         <Button
           variant="default"
-          className="bg-primary hover:bg-primary/90 hover-lift"
+          size="lg"
+          className="bg-primary hover:bg-primary/90 hover-lift shadow-lg hover:shadow-xl transition-all"
           onClick={() => document.getElementById('file-input')?.click()}
         >
+          <Upload className="w-4 h-4 mr-2" />
           Select Files
         </Button>
         <input
@@ -96,11 +100,11 @@ export const FileUpload = ({ onUploadComplete, currentFolderId }: FileUploadProp
         />
         
         {/* File type hints */}
-        <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-          <span className="px-2 py-1 bg-secondary/50 rounded">Images</span>
-          <span className="px-2 py-1 bg-secondary/50 rounded">Videos</span>
-          <span className="px-2 py-1 bg-secondary/50 rounded">Documents</span>
-          <span className="px-2 py-1 bg-secondary/50 rounded">Archives</span>
+        <div className="mt-8 flex flex-wrap justify-center gap-2 text-xs">
+          <span className="px-3 py-1.5 bg-secondary rounded-full text-muted-foreground hover:bg-secondary/80 transition-colors">📷 Images</span>
+          <span className="px-3 py-1.5 bg-secondary rounded-full text-muted-foreground hover:bg-secondary/80 transition-colors">🎥 Videos</span>
+          <span className="px-3 py-1.5 bg-secondary rounded-full text-muted-foreground hover:bg-secondary/80 transition-colors">📄 Documents</span>
+          <span className="px-3 py-1.5 bg-secondary rounded-full text-muted-foreground hover:bg-secondary/80 transition-colors">📦 Archives</span>
         </div>
       </div>
     </>
